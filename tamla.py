@@ -28,13 +28,16 @@ def get_bot_response(
     if chat_mode_val == ChatMode.JUST_CHAT_COMMAND_ID.value:
         chat_chain = get_prompt_llm_chain(
             JUST_CHAT_PROMPT,
+            # chatstate,
             llm_settings=chat_state.bot_settings,
             api_key=chat_state.google_api_key,
             callbacks=chat_state.callbacks,
             stream=True,
         )
+        print('\n\n\n\n여기:', chat_state.selected_career_groups,chat_state.user_type, '\n\n\n')
         answer = chat_chain.invoke(
-            {
+            {   "user_career": chat_state.selected_career_groups,
+                "user_type": chat_state.user_type,
                 "message": chat_state.message,
                 "chat_history": pairwise_chat_history_to_msg_list(
                     chat_state.chat_history

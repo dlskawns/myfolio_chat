@@ -49,39 +49,39 @@ If you are done uploading, you can rename it:
 /db rename my-cool-collection-name
 ```
 """
-age_options = {
-    "10대": (
-        "/10 ",
-        "10대 입맛에 맞는 음식점 및 카페를 추천해드리겠습니다.",
+career_options = {
+    "건축/도시": (
+        "건축/도시",
+        "건축/도시 진로와 관련하여 어떤 점이 고민인가요?",
         "I will recommend restaurants and cafes suitable for teens' tastes."
     ),
-    "20대": (
+    "교육": (
         "/20 ",
-        "20대 입맛에 맞는 음식점 및 카페를 추천해드리겠습니다.",
+        "교육 진로와 관련하여 어떤 점이 고민인가요?",
         "I will recommend restaurants and cafes suitable for people in their 20s."
     ),
-    "30대": (
+    "기계/로봇": (
         "/30 ",
-        "30대 입맛에 맞는 음식점 및 카페를 추천해드리겠습니다.",
+        "기계/로봇 진로와 관련하여 어떤 점이 고민인가요?",
         "I will recommend restaurants and cafes suitable for people in their 30s."
     ),
-    "40대": (
+    "무용/스포츠": (
         "/40 ",
-        "40대 입맛에 맞는 음식점 및 카페를 추천해드리겠습니다.",
+        "무용/스포츠 진로와 관련하여 어떤 점이 고민인가요?",
         "I will recommend restaurants and cafes suitable for people in their 40s."
     ),
-    "50대": (
+    "물리/수학": (
         "/50 ",
-        "50대 입맛에 맞는 음식점 및 카페를 추천해드리겠습니다.",
+        "물리/수학 진로와 관련하여 어떤 점이 고민인가요?",
         "I will recommend restaurants and cafes suitable for people in their 50s."
     ),
-    "60대": (
+    "미디어/엔터테인먼트": (
         "/60 ",
-        "60대 입맛에 맞는 음식점 및 카페를 추천해드리겠습니다.",
+        "미디어/엔터테인먼트 진로와 관련하여 어떤 점이 고민인가요?",
         "I will recommend restaurants and cafes suitable for people in their 60s."
     ),
 }
-mode_options = list(age_options.keys())
+mode_options = list(career_options.keys())
 
 chat_with_docs_status_config = {
     "thinking.header": "One sec...",

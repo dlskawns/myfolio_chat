@@ -17,8 +17,8 @@ from streamlit.delta_generator import DeltaGenerator
 from langchain_core.outputs import ChatGenerationChunk, GenerationChunk, LLMResult
 from utils.streamlit.helpers import fix_markdown
 from langchain_google_genai import ChatGoogleGenerativeAI
-
-
+from utils.chat_state import ChatState
+from langchain_core.runnables import RunnablePassthrough
 class CallbackHandlerDDGStreamlit(BaseCallbackHandler):
     def __init__(self, container: DeltaGenerator, end_str: str = ""):
         self.container = container
@@ -124,11 +124,13 @@ def get_llm(
 
 def get_prompt_llm_chain(
     prompt: PromptTemplate,
+    # chatstate: ChatState,
     llm_settings: BotSettings,
     api_key: str | None = None,
     print_prompt=False,
     **kwargs,
 ):
+    
     if not print_prompt:
         return prompt | get_llm(llm_settings, api_key, **kwargs) | StrOutputParser()
 
@@ -141,6 +143,7 @@ def get_prompt_llm_chain(
         return thing
     
     return (
+        
         prompt
         | print_and_return
         | get_llm(llm_settings, api_key, **kwargs)
