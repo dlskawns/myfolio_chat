@@ -1,0 +1,40 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+      "default": {
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "datefmt": "%Y-%m-%d %H:%M:%S"
+      },
+      "custom": {
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "datefmt": "%Y-%m-%dT%H:%M:%S%z"
+      }
+    },
+    "handlers": {
+      "h1_stderr": {
+        "class": "logging.StreamHandler",
+        "level": "DEBUG",
+        "formatter": "default",
+        "stream": "ext://sys.stdout"
+      },
+      "file_handler": {
+        "class": "logging.FileHandler",
+        "level": "DEBUG",
+        "formatter": "default",
+        "filename": "logs/app.log",
+        "mode": "a"
+      }
+    },
+    "root": {
+      "level": "DEBUG",
+      "handlers": ["h1_stderr", "file_handler"]
+    },
+    "loggers": {
+      "my_module": {
+        "level": "DEBUG",
+        "handlers": ["h1_stderr"],
+        "propagate": false
+      }
+    }
+  }

@@ -25,7 +25,7 @@ from utils.type_utils import (
 )
 from utils.streamlit.helpers import (
     mode_options,
-    age_options,
+    career_options,
     STAND_BY_FOR_INGESTION_MESSAGE,
     status_config,
     show_sources,
@@ -41,7 +41,7 @@ from tamla import get_bot_response
 logger = get_logger()
 
 # Show title and description.
-st.logo(logo := "media/탐라logo_wo_words.png")
+st.logo(logo := "/Users/david/Downloads/창사챗봇/Img_Logo.png")
 st.set_page_config(page_title="Tamla's Flavor", page_icon=logo)
 
 # HTML and CSS for the logo size customization.
@@ -56,7 +56,7 @@ st.markdown("""
             font-weight: 600;
         }
         [data-testid=stSidebar] {
-        background-color: #ffe5be;
+        background-color: #f0f0f0;
         }   
         .stButton > button {
         width: 100%;
@@ -96,14 +96,14 @@ def open_ai_chat(parsed_query=None, eng_flag=False):
 
     if prompt := temp_prompt:
         ss.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user", avatar=ss.user_avatar):
+        with st.chat_message("user", avatar="🧑‍💻"):
             st.markdown(prompt)
 
         parsed_query.message = prompt
         parsed_query.chat_mode = ChatMode.JUST_CHAT_COMMAND_ID
         chat_state.update(parsed_query=parsed_query)
 
-        with st.chat_message("assistant", avatar=ss.bot_avatar):
+        with st.chat_message("assistant", avatar="🦖"):
             try:
                 chat_mode = parsed_query.chat_mode
                 status = st.status(status_config[chat_mode]["thinking.header"])
@@ -158,86 +158,93 @@ def user_id_setting():
         chat_state.user_id = user_id
         chat_state.chat_history.append(("사용자 이름: ", "앞으로 내 이름을 언급하면서, 친절하게 답변해줘. 내 이름: "+user_id))
 
-def age():
+def career():
     # 세션 상태 초기화
-    # if 'selected_age_groups' not in chat_state:
-    # chat_state.selected_age_groups = [list(age_options.keys())[1]]
+    # if 'selected_career_groups' not in chat_state:
+    # chat_state.selected_career_groups = [list(career_options.keys())[1]]
 
     # Default mode
-    with st.expander("나이대 선택", expanded=True):
-        selected_age_groups = st.multiselect(
-            "나이대 복수 선택 가능", # 더 맞춤형 서비스를 제공해드리겠습니다. 
-            options=list(age_options.keys()),
-            default=chat_state.selected_age_groups,
-            key="age_multiselect"
+    with st.expander("희망 진로 선택", expanded=True):
+        selected_career_groups = st.multiselect(
+            "희망 진로 복수 선택 가능", # 더 맞춤형 서비스를 제공해드리겠습니다. 
+            options=list(career_options.keys()),
+            default=chat_state.selected_career_groups,
+            key="career_multiselect"
         )
         
-        # 선택된 나이대 저장
-        chat_state.selected_age_groups = selected_age_groups
+        # 선택된 진로 저장
+        chat_state.selected_career_groups = selected_career_groups
         
-        if selected_age_groups:
+        if selected_career_groups:
             cmd_prefixes = []
             cmd_prefix_explainers = []
-            for age_group in selected_age_groups:
-                cmd_prefix, cmd_prefix_explainer, _ = age_options[age_group]
+            for career_group in selected_career_groups:
+                cmd_prefix, cmd_prefix_explainer, _ = career_options[career_group]
                 cmd_prefixes.append(cmd_prefix)
                 cmd_prefix_explainers.append(cmd_prefix_explainer)
             
-            st.caption("선택된 나이대:")
-            for age_group, explainer in zip(selected_age_groups, cmd_prefix_explainers):
-                st.caption(f"• {age_group}: {explainer}")
+            st.caption("선택된 진로:")
+            for career_group, explainer in zip(selected_career_groups, cmd_prefix_explainers):
+                st.caption(f"• {career_group}: {explainer}")
         else:
-            st.caption("나이대를 선택해주세요.")
+            st.caption("진로를 선택해주세요.")
+    
 
-    # 선택된 나이대 확인 (디버깅용)
-    # st.write("현재 선택된 나이대:", chat_state.selected_age_groups)
+    # 선택된 진로 확인 (디버깅용)
+    # st.write("현재 선택된 진로:", chat_state.selected_career_groups)
 
-def gender():
+def counsel_type():
     # 세션 상태 초기화
-    # if 'gender' not in chat_state:
-        # chat_state.gender = None
+    # if 'counsel_type' not in chat_state:
+        # chat_state.counsel_type = None
 
-    # 사이드바에 성별 선택 버튼 추가
-    with st.expander("성별 선택", expanded=True):
-        # st.write("## 성별 선택")
+    # 사이드바에 상담 유형 선택 버튼 추가
+    with st.expander("상담 유형 선택", expanded=True):
+
         col1, col2 = st.columns(2)
         
         # 남성 버튼
-        if col1.button("남성", key="male", 
+        if col1.button("진학", key="school", 
                     use_container_width=True,
-                    type="primary" if chat_state.gender == "남성" else "secondary"):
-            if chat_state.gender == "남성":
-                chat_state.gender = None  # 이미 선택된 경우 취소
+                    type="primary" if chat_state.counsel_type == "진학" else "secondary"):
+            if chat_state.counsel_type == "진학":
+                chat_state.counsel_type = None  # 이미 선택된 경우 취소
             else:
-                chat_state.gender = "남성"
+                chat_state.counsel_type = "진학"
         
         # 여성 버튼
-        if col2.button("여성", key="female", 
+        if col2.button("진로", key="career", 
                     use_container_width=True,
-                    type="primary" if chat_state.gender == "여성" else "secondary"):
-            if chat_state.gender == "여성":
-                chat_state.gender = None  # 이미 선택된 경우 취소
+                    type="primary" if chat_state.counsel_type == "진로" else "secondary"):
+            if chat_state.counsel_type == "진로":
+                chat_state.counsel_type = None  # 이미 선택된 경우 취소
             else:
-                chat_state.gender = "여성"
+                chat_state.counsel_type = "진로"
 
 
-def car():
-    # 사이드바에 주차 선택 버튼 추가
-    with st.expander("주차 유무 선택", expanded=True):
+def user_type():
+    # 사이드바에 유저타입 선택 버튼 추가
+    with st.expander("분류 선택", expanded=True):
         # st.write("## 성별 선택")
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         
-        # 유 버튼
-        if col1.button("유", key="y", 
+        # 학생 버튼
+        if col1.button("학생", key="s", 
                     use_container_width=True,
-                    type="primary" if chat_state.car == "y" else "secondary"):
-            chat_state.car = "y"
 
-        # 무 버튼
-        if col2.button("무", key="n", 
+                    type="primary" if chat_state.user_type == "s" else "secondary"):
+            chat_state.user_type = "학생"
+
+        # 학부모 버튼
+        if col2.button("학부모", key="p", 
                     use_container_width=True,
-                    type="primary" if chat_state.car == "n" else "secondary"):
-            chat_state.car = "n"
+                    type="primary" if chat_state.user_type == "p" else "secondary"):
+            chat_state.user_type = "학부모"
+        # 교사 버튼
+        if col3.button("교사", key="t", 
+                    use_container_width=True,
+                    type="primary" if chat_state.user_type == "t" else "secondary"):
+            chat_state.user_type = "교사"
 
 
 def food_selection():
@@ -289,26 +296,26 @@ def price():
 
 def ref_dropdown():
     # Default mode
-    with st.expander("나이대 선택", expanded=False):
+    with st.expander("진로 선택", expanded=False):
         ss.default_mode = st.selectbox(
-            "나이대를 선택해주시면 더 맞춤형 서비스를 제공해드리겠습니다.",
+            "진로를 선택해주시면 더 맞춤형 서비스를 제공해드리겠습니다.",
             mode_options,
             index=0,
             # label_visibility="collapsed",
         )
-        cmd_prefix, cmd_prefix_explainer, _ = age_options[ss.default_mode]
+        cmd_prefix, cmd_prefix_explainer, _ = career_options[ss.default_mode]
         st.caption(cmd_prefix_explainer)
         
 def side_bar():
     ####### Sidebar #######
     with st.sidebar:
-        st.subheader("Tamla's Flavor_" + VERSION)
+        st.subheader("Myfolio 상담 봇 " + VERSION)
 
         # chat_state 설정 
-        chat_state.selected_age_groups = [list(age_options.keys())[1]]
-        chat_state.gender = None
+        chat_state.selected_career_groups = [list(career_options.keys())[1]]
+        chat_state.counsel_type = None
         chat_state.selected_foods = []
-        chat_state.car = None
+
 
         # user 이름 설정
         user_id_setting()
@@ -317,13 +324,13 @@ def side_bar():
         st.write("아래에서 원하시는 항목을 선택해주시면, 더 맞춤형 서비스를 제공해드리겠습니다.")  # 설명을 별도로 추가
 
         # 차 여부 
-        car() 
+        user_type() 
 
         # 성별 설정 
-        gender()
+        counsel_type()
 
-        # 나이대 설정 
-        age()
+        # 진로 설정 
+        career()
 
         # 가격대 설정 
         price()
@@ -346,9 +353,9 @@ def title_header(logo, title):
         with col2:
             # 두 번째 열에 제목 텍스트 표시
             st.markdown(f"# {title}")  # 큰 글씨로 제목 표시
-        
+        #fff3e0
 def format_robot_response(message):
-    return f'''<div style="background-color: #fff3e0; padding: 15px; border-radius: 8px; border: 1px solid #ffb74d; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #e65100; box-shadow: 0 4px 8px rgba(0,0,0,0.1); font-size: 16px;">
+    return f'''<div style="background-color: #f0f0f0; padding: 15px; border-radius: 8px; border: 1px solid #ffb74d; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #e65100; box-shadow: 0 4px 8px rgba(0,0,0,0.1); font-size: 16px;">
         <strong>🍊:</strong> {message} </div>'''
         
 def main():
@@ -357,34 +364,40 @@ def main():
 
     side_bar()
 
-    # 로고 이미지 로드
-    logo = Image.open("media/탐라logo_w_horizon.png")
+    # # 로고 이미지 로드
+    # logo = Image.open("media/탐라logo_w_horizon.png")
 
     parsed_query = parse_query("")
 
     # 세션 상태에 페이지 상태 초기화
     if 'page' not in ss:
-        ss.page = 'language_select'
+        ss.page = 'user_select'
     
     # 언어 선택 페이지
-    if ss.page == 'language_select':
-        st.title("🍊 환영합니다 / Welcome!")
-        st.write("선호하는 언어를 선택하세요 / Choose your preferred language")
+    if ss.page == 'user_select':
+        st.title("환영합니다 / Welcome!")
+        st.write("안녕하세요! 마이폴리오 chat입니다. 상담을 원하시면 아래 상담시작 버튼을 눌러주세요!")
         
-        col1, col2 = st.columns(2)
+        col1= st.columns(1)[0]
         
         with col1:
-            if st.button("한국어", use_container_width=True):
-                ss.language = "한국어"
+            if st.button("상담 시작!", use_container_width=True):
+                ss.language = "상담 시작!"
                 ss.page = 'main_app'
                 st.rerun()
         
-        with col2:
-            if st.button("English", use_container_width=True):
-                ss.language = "English"
-                ss.page = 'main_app'
-                st.rerun()
-    
+        # with col2:
+        #     if st.button("학부모", use_container_width=True):
+        #         ss.language = "학부모"
+        #         ss.page = 'main_app'
+        #         st.rerun()
+
+        # with col3:
+        #     if st.button("교사", use_container_width=True):
+        #         ss.language = "교사"
+        #         ss.page = 'main_app'
+        #         st.rerun()
+
 
     # 메인 앱 페이지
     elif ss.page == 'main_app':
@@ -433,7 +446,7 @@ def main():
         
         else:
             title_header(logo, "")
-            st.title("탐라는 맛 AI와 함께하는 미식 여행에 오신 것을 환영합니다!")
+            st.title("Myfolio의 AI 봇과 함께하는 진로/진학 상담 서비스입니다.")
             # Korean content here
             st.markdown(GREETING_MESSAGE_KOR)
 
