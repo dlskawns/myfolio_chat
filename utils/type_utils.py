@@ -23,7 +23,9 @@ class ChatMode(Enum):
     NONE_COMMAND_ID = -1
     JUST_CHAT_COMMAND_ID = 6
     JUST_CHAT_GREETING_ID = 7
-
+    SCHOOL_CHAT_COMMAND_ID = 1
+    CAREER_CHAT_COMMAND_ID = 2
+    
 
 chat_modes_needing_llm = {
     ChatMode.JUST_CHAT_COMMAND_ID,

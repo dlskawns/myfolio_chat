@@ -65,7 +65,8 @@ command_ids = {
 DEFAULT_CHAT_MODE = 6 # command_ids[DEFAULT_MODE]
 
 GREETING_MESSAGE_KOR = """\
-** 안녕하세요! 저는 마폴 AI입니다!** 진로/진학 설계 및 진행에 어려움을 겪고 계신가요? 저는 진로 진학 고민에 대한 상담을 해드립니다.😋
+안녕하세요! 저는 마폴 AI입니다!\n
+진로/진학 설계 및 진행에 어려움을 겪고 계신가요? 저는 진로 진학 고민에 대한 상담을 해드립니다.😋
 """
 
 
