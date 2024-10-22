@@ -81,6 +81,7 @@ if "chat_state" not in ss:
 chat_state: ChatState = ss.chat_state
 
 def open_ai_chat(parsed_query=None, eng_flag=False):
+    print('<<><><><><>', parsed_query)
     if "messages" not in ss:
         ss.messages = []
 
@@ -98,11 +99,12 @@ def open_ai_chat(parsed_query=None, eng_flag=False):
         ss.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user", avatar="🧑‍💻"):
             st.markdown(prompt)
-
+        if career:
+            parsed_query.chat_mode =  ChatMode.CAREER_CHAT_COMMAND_ID
         parsed_query.message = prompt
-        parsed_query.chat_mode = ChatMode.JUST_CHAT_COMMAND_ID
+        # parsed_query.chat_mode = ChatMode.JUST_CHAT_COMMAND_ID
         chat_state.update(parsed_query=parsed_query)
-
+        print('>>>',parsed_query.chat_mode)
         with st.chat_message("assistant", avatar="🦖"):
             try:
                 chat_mode = parsed_query.chat_mode
@@ -120,9 +122,11 @@ def open_ai_chat(parsed_query=None, eng_flag=False):
             )
             chat_state.callbacks[1] = cb
             chat_state.add_to_output = lambda x: cb.on_llm_new_token(x, run_id=None)                
-
+            print('챗모드', chat_mode)
             response = get_bot_response(chat_state)
-            answer = response["answer"]
+            answer = response
+            # answer = response["answer"]
+
 
 
             # Display the "complete" status - custom or default
@@ -140,6 +144,8 @@ def open_ai_chat(parsed_query=None, eng_flag=False):
 
 
             message_placeholder.markdown(answer)
+            
+    
         ss.messages.append({"role": "assistant", "content": answer})
     # else:
     #     st.info("OpenAI API 키를 입력해주세요.", icon="🗝️")
@@ -255,41 +261,41 @@ def food_selection():
     # if 'selected_foods' not in st.session_state:
         # chat_state.selected_foods = []
 
-    with st.expander("음식 종류 선택", expanded=True):
-        st.write("어떤 음식을 드시고 싶으신가요? (복수 선택 가능)")
+    # with st.expander("음식 종류 선택", expanded=True):
+    #     st.write("어떤 음식을 드시고 싶으신가요? (복수 선택 가능)")
         
-        cols = st.columns(3)  # 3열로 나누어 표시
-        for i, food in enumerate(food_types):
-            col = cols[i % 3]
-            if col.button(
-                food,
-                key=f"food_{food}",
-                help=f"{food} 선택",
-                type="primary" if food in chat_state.selected_foods else "secondary"
-            ):
-                if food in chat_state.selected_foods:
-                    chat_state.selected_foods.remove(food)
-                else:
-                    chat_state.selected_foods.append(food)
+    #     cols = st.columns(3)  # 3열로 나누어 표시
+    #     for i, food in enumerate(food_types):
+    #         col = cols[i % 3]
+    #         if col.button(
+    #             food,
+    #             key=f"food_{food}",
+    #             help=f"{food} 선택",
+    #             type="primary" if food in chat_state.selected_foods else "secondary"
+    #         ):
+    #             if food in chat_state.selected_foods:
+    #                 chat_state.selected_foods.remove(food)
+    #             else:
+    #                 chat_state.selected_foods.append(food)
         
-        if chat_state.selected_foods:
-            st.write("선택된 음식 종류:")
-            st.write(", ".join(chat_state.selected_foods))
-        else:
-            st.write("아직 선택된 음식이 없습니다.")
+    #     if chat_state.selected_foods:
+    #         st.write("선택된 음식 종류:")
+    #         st.write(", ".join(chat_state.selected_foods))
+    #     else:
+    #         st.write("아직 선택된 음식이 없습니다.")
 
-def price():
-    # Settings
-    with st.expander("가격대 설정", expanded=True):
-        # 가격대 슬라이더
-        price_range = st.slider(
-            "1인 기준 가격대를 선택해주세요",
-            min_value=5000,
-            max_value=100000,
-            value=(5000, 50000),  # Default range
-            step=5000,
-            format="₩%d",
-        )
+# def price():
+#     # Settings
+#     with st.expander("가격대 설정", expanded=True):
+#         # 가격대 슬라이더
+#         price_range = st.slider(
+#             "1인 기준 가격대를 선택해주세요",
+#             min_value=5000,
+#             max_value=100000,
+#             value=(5000, 50000),  # Default range
+#             step=5000,
+#             format="₩%d",
+#         )
 
     # st.write(f"선택된 가격대: ₩{price_range[0]} ~ ₩{price_range[1]}")
         
@@ -332,8 +338,8 @@ def side_bar():
         # 진로 설정 
         career()
 
-        # 가격대 설정 
-        price()
+        # # 가격대 설정 
+        # price()
 
         # food_selection
         food_selection()
@@ -473,16 +479,33 @@ def main():
 
             # Show sample queries
             clicked_sample_query = None
-            for _ in range(2):
-                st.write("")
-            for i, (btn_col, sample_query) in enumerate(zip(st.columns(2), ss.sample_queries_kor)):
-                with btn_col:
-                    if st.button(sample_query, key=f"query{i}"):
-                        clicked_sample_query = sample_query   
+            # for _ in range(2):
+            #     st.write("")
+            # for i, (btn_col, sample_query) in enumerate(zip(st.columns(2), ss.sample_queries_kor)):
+            #     with btn_col:
+            #         if st.button(sample_query, key=f"query{i}"):
+            #             clicked_sample_query = sample_query   
+            print('여여여여기', chat_state.chat_mode)
+            with st.chat_message('assistant'):
+                st.write('어떤 고민이 있으신가요? 아래 버튼을 선택해주세요')
+                career = st.button('진로(직업)')
+                school = st.button('진학')
 
+                # if career:
+                #     st.
+            if career:
+                print('여까진 옴')
+                parsed_query.chat_mode =  ChatMode.CAREER_CHAT_COMMAND_ID
+                chat_state.update(parsed_query=parsed_query)
+                with st.chat_message('assistant'):
+                    st.write('원하시는 진로/직업 분야가 있으신가요? 진로/직업관련 어떤 고민인지 알려주세요!')
 
+            elif school:
+                parsed_query.chat_mode =  ChatMode.SCHOOL_CHAT_COMMAND_ID
+                chat_state.update(parsed_query=parsed_query)
+
+            print('dkdkdkdk', parsed_query)
             open_ai_chat(parsed_query=parsed_query)
-
 
 if __name__ == '__main__':
     main()  
