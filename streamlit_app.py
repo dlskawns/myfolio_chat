@@ -36,10 +36,124 @@ from utils.streamlit.helpers import (
 )
 from streamlit_modal import Modal
 from tamla import get_bot_response
+import ast
 
+def display_store_info(data):
+    # 관련자격 (링크 추가)
+    certificates = data.get('certificates', '').split(', ')
+    linked_certificates = []
+    for certificate in certificates:
+        # 괄호로 URL을 분리
+        if '(' in certificate and ')' in certificate:
+            name, url = certificate.split('(')
+            url = url.replace(")", "").strip()
+            linked_certificates.append(f"<a href='{url}' target='_blank' style='text-decoration: none; color: #007bff;'>{name.strip()}</a>")
+        else:
+            linked_certificates.append(certificate.strip())
+    institutes = data.get('job_rel_orgs', '').split(', ')
+    linked_institute = []
+    for institute in institutes:
+        # 괄호로 URL을 분리
+        if '(' in institute and ')' in institute:
+            name, url = institute.split('(')
+            url = url.replace(")", "").strip()
+            linked_institute.append(f"<a href='{url}' target='_blank' style='text-decoration: none; color: #007bff;'>{name.strip()}</a>")
+        else:
+            linked_institute.append(certificate.strip())
+
+    content = "<div style='font-family: sans-serif; padding: 10px;'>"
+
+    # 직업명
+    content += "<p><b>🔍 직업명</b></p>"
+    content += f"<p>{data.get('name', '')}</p>"
+    
+    content += f"<br>"
+
+    # 관련직업명
+    content += "<p><b>🔍 관련직업명</b></p>"
+    content += f"<p>{data.get('rel_job_nm', ''), data.get('std_job_nm', '')}</p>"
+    
+    content += f"<br>"
+
+    # 핵심능력
+    content += "<p><b>🔑 핵심능력</b></p>"
+    content += f"<p>{data.get('ability', '')}</p>"
+
+    content += f"<br>"
+
+    # 적성 및 흥미
+    content += "<p><b>💡 적성 및 흥미</b></p>"
+    content += f"<p><b>적성:</b> {data.get('aptit_name', '')}</p>"
+    content += f"<p><b>흥미:</b> {data.get('interest', '')}</p>"
+
+    content += f"<br>"
+
+    # 관련직업명
+    content += "<p><b>🔍 예상 전망</b></p>"
+    content += f"<p>{data.get('forecast', '')}</p>"
+    content += f"<br>"
+    # 관련학과 및 관련자격
+    content += "<p><b>🎓 관련교육 및 관련자격</b></p>"
+    content += "<p><b>관련커리큘럼:</b> " + ", ".join(data.get('curriculum', '').split(', ')) + "</p>"
+    content += "<p><b>관련자격:</b> " + ", ".join(linked_certificates) + "</p>"
+    content += f"<br>"
+    # 관련직업명
+    content += "<p><b>📋 관련 기관</b></p>"
+    content += f"<p>" + ", ".join(linked_institute) + "</p>"
+    content += f"<br>"
+    # 핵심 능력 비중
+    indicators = data.get("indicators", "").split(", ")
+    indicator_data = [float(x) for x in data.get("indicator_data", "").split(", ")]
+    print('indicator_data:', indicator_data)
+    # content = "<div style='font-family: sans-serif; padding: 10px;'>"
+    content += "<p><b>📊 국내 직업 지표</b></p>"
+
+    # 각 인디케이터를 막대그래프로 표시
+    for i, (indicator, value) in enumerate(zip(indicators, indicator_data)):
+        content += f"""
+        <div style="margin-bottom: 8px;">
+            <span style="display: inline-block; width: 150px; font-weight: bold;">{indicator}</span>
+            <div style="display: inline-block; background-color: #f0f0f0; border-radius: 5px; width: 60%; height: 20px; vertical-align: middle;">
+                <div style="width: {value}%; background-color: #4CAF50; height: 100%; border-radius: 5px;"></div>
+            </div>
+            <span style="margin-left: 10px;">{value}%</span>
+        </div>
+        """
+    
+    content += "</div>"
+
+
+    content += "</div>"
+    return content
+
+def url_setting(data):
+    content = display_store_info(data)
+    
+    # 최종 HTML을 Markdown에 적용
+    info_box = f"""
+        <div style="border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:0px;">
+            <details>
+                <summary style="cursor: pointer; font-size: 1.2em; font-weight: bold;">🍊 {data.get('name', '직업 정보')} 정보</summary>
+                <div style="padding-top: 10px;">
+                    {content}
+                </div>
+            </details>
+        </div>
+    """
+    return info_box
+
+
+def json_format(response):
+    response = response.replace("json", '')
+    response = response.replace("```", '').strip()
+    response = ast.literal_eval(response)
+    return response
 # 로그 설정 
 logger = get_logger()
-
+from clients import get_vectordb
+vdb = get_vectordb()
+vectorstore = vdb.hugging_vectorstore
+retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 # Show title and description.
 st.logo(logo := "/Users/david/Downloads/창사챗봇/Img_Logo.png")
 st.set_page_config(page_title="Tamla's Flavor", page_icon=logo)
@@ -70,7 +184,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True) # text color for dark theme: e6e6e6
 
-# seesion management (api key, query parameters, ...)
+# 세션 관리 (API 키, 쿼리 파라미터 등)
 ss = st.session_state
 if "chat_state" not in ss:
     # Run just once
@@ -80,270 +194,384 @@ if "chat_state" not in ss:
 
 chat_state: ChatState = ss.chat_state
 
-def open_ai_chat(parsed_query=None, eng_flag=False):
-    print('<<><><><><>', parsed_query)
+def open_ai_chat(parsed_query=None, eng_flag=False, message=None):
     if "messages" not in ss:
         ss.messages = []
 
-    for message in ss.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    # 메시지 표시를 여기에서 제거했습니다.
 
-    # Chat 입력창 설명 
-    if eng_flag == True:
-        temp_prompt = st.chat_input("How can I assist you?")
-    else:
-        temp_prompt = st.chat_input("무엇을 도와드릴까요?")
-
-    if prompt := temp_prompt:
-        ss.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user", avatar="🧑‍💻"):
-            st.markdown(prompt)
-        if career:
-            parsed_query.chat_mode =  ChatMode.CAREER_CHAT_COMMAND_ID
-        parsed_query.message = prompt
-        # parsed_query.chat_mode = ChatMode.JUST_CHAT_COMMAND_ID
-        chat_state.update(parsed_query=parsed_query)
-        print('>>>',parsed_query.chat_mode)
-        with st.chat_message("assistant", avatar="🦖"):
-            try:
-                chat_mode = parsed_query.chat_mode
-                status = st.status(status_config[chat_mode]["thinking.header"])
-                status.write(status_config[chat_mode]["thinking.body"])
-            except KeyError:
-                status = None
-
-            # Prepare container and callback handler for showing streaming response
-            message_placeholder = st.empty()
-
-            cb = CallbackHandlerDDGStreamlit(
-                message_placeholder,
-                end_str=STAND_BY_FOR_INGESTION_MESSAGE
-            )
-            chat_state.callbacks[1] = cb
-            chat_state.add_to_output = lambda x: cb.on_llm_new_token(x, run_id=None)                
-            print('챗모드', chat_mode)
-            response = get_bot_response(chat_state)
-            answer = response
-            # answer = response["answer"]
-
-
-
-            # Display the "complete" status - custom or default
-            if status:
-                default_status = status_config.get(chat_mode, just_chat_status_config)
-                status.update(
-                    label=response.get("status.header", default_status["complete.header"]),
-                    state="complete",
-                )
-                status.write(response.get("status.body", default_status["complete.body"]))
-
-
-            # Add the response to the chat history
-            chat_state.chat_history.append((prompt, answer))
-
-
-            message_placeholder.markdown(answer)
-            
-    
-        ss.messages.append({"role": "assistant", "content": answer})
-    # else:
-    #     st.info("OpenAI API 키를 입력해주세요.", icon="🗝️")
-
-def user_id_setting(): 
-    user_id = st.sidebar.text_input("User ID", 
-                                    label_visibility='visible',
-                                    disabled=False,
-                                    placeholder="홍길동")
-    # 양쪽 공백 제거
-    user_id = user_id.strip()
-
-    if user_id == "":
-        chat_state.user_id = None
-    else:
-        chat_state.user_id = user_id
-        chat_state.chat_history.append(("사용자 이름: ", "앞으로 내 이름을 언급하면서, 친절하게 답변해줘. 내 이름: "+user_id))
-
-def career():
-    # 세션 상태 초기화
-    # if 'selected_career_groups' not in chat_state:
-    # chat_state.selected_career_groups = [list(career_options.keys())[1]]
-
-    # Default mode
-    with st.expander("희망 진로 선택", expanded=True):
-        selected_career_groups = st.multiselect(
-            "희망 진로 복수 선택 가능", # 더 맞춤형 서비스를 제공해드리겠습니다. 
-            options=list(career_options.keys()),
-            default=chat_state.selected_career_groups,
-            key="career_multiselect"
-        )
-        
-        # 선택된 진로 저장
-        chat_state.selected_career_groups = selected_career_groups
-        
-        if selected_career_groups:
-            cmd_prefixes = []
-            cmd_prefix_explainers = []
-            for career_group in selected_career_groups:
-                cmd_prefix, cmd_prefix_explainer, _ = career_options[career_group]
-                cmd_prefixes.append(cmd_prefix)
-                cmd_prefix_explainers.append(cmd_prefix_explainer)
-            
-            st.caption("선택된 진로:")
-            for career_group, explainer in zip(selected_career_groups, cmd_prefix_explainers):
-                st.caption(f"• {career_group}: {explainer}")
-        else:
-            st.caption("진로를 선택해주세요.")
-    
-
-    # 선택된 진로 확인 (디버깅용)
-    # st.write("현재 선택된 진로:", chat_state.selected_career_groups)
-
-def counsel_type():
-    # 세션 상태 초기화
-    # if 'counsel_type' not in chat_state:
-        # chat_state.counsel_type = None
-
-    # 사이드바에 상담 유형 선택 버튼 추가
-    with st.expander("상담 유형 선택", expanded=True):
-
-        col1, col2 = st.columns(2)
-        
-        # 남성 버튼
-        if col1.button("진학", key="school", 
-                    use_container_width=True,
-                    type="primary" if chat_state.counsel_type == "진학" else "secondary"):
-            if chat_state.counsel_type == "진학":
-                chat_state.counsel_type = None  # 이미 선택된 경우 취소
-            else:
-                chat_state.counsel_type = "진학"
-        
-        # 여성 버튼
-        if col2.button("진로", key="career", 
-                    use_container_width=True,
-                    type="primary" if chat_state.counsel_type == "진로" else "secondary"):
-            if chat_state.counsel_type == "진로":
-                chat_state.counsel_type = None  # 이미 선택된 경우 취소
-            else:
-                chat_state.counsel_type = "진로"
-
-
-def user_type():
-    # 사이드바에 유저타입 선택 버튼 추가
-    with st.expander("분류 선택", expanded=True):
-        # st.write("## 성별 선택")
-        col1, col2, col3 = st.columns(3)
-        
-        # 학생 버튼
-        if col1.button("학생", key="s", 
-                    use_container_width=True,
-
-                    type="primary" if chat_state.user_type == "s" else "secondary"):
-            chat_state.user_type = "학생"
-
-        # 학부모 버튼
-        if col2.button("학부모", key="p", 
-                    use_container_width=True,
-                    type="primary" if chat_state.user_type == "p" else "secondary"):
-            chat_state.user_type = "학부모"
-        # 교사 버튼
-        if col3.button("교사", key="t", 
-                    use_container_width=True,
-                    type="primary" if chat_state.user_type == "t" else "secondary"):
-            chat_state.user_type = "교사"
-
-
-def food_selection():
-    # 음식 종류 리스트
-    food_types = ["한식", "일식", "중식", "양식", "멕시코 음식", "기타"]
-
-    # 세션 상태 초기화
-    # if 'selected_foods' not in st.session_state:
-        # chat_state.selected_foods = []
-
-    # with st.expander("음식 종류 선택", expanded=True):
-    #     st.write("어떤 음식을 드시고 싶으신가요? (복수 선택 가능)")
-        
-    #     cols = st.columns(3)  # 3열로 나누어 표시
-    #     for i, food in enumerate(food_types):
-    #         col = cols[i % 3]
-    #         if col.button(
-    #             food,
-    #             key=f"food_{food}",
-    #             help=f"{food} 선택",
-    #             type="primary" if food in chat_state.selected_foods else "secondary"
-    #         ):
-    #             if food in chat_state.selected_foods:
-    #                 chat_state.selected_foods.remove(food)
-    #             else:
-    #                 chat_state.selected_foods.append(food)
-        
-    #     if chat_state.selected_foods:
-    #         st.write("선택된 음식 종류:")
-    #         st.write(", ".join(chat_state.selected_foods))
+    # if message is None:
+    #     if eng_flag == True:
+    #         temp_prompt = st.chat_input("How can I assist you?")
     #     else:
-    #         st.write("아직 선택된 음식이 없습니다.")
+    #         temp_prompt = st.chat_input("무엇을 도와드릴까요?")
+    #     if prompt := temp_prompt:
+    #         message = prompt
 
-# def price():
-#     # Settings
-#     with st.expander("가격대 설정", expanded=True):
-#         # 가격대 슬라이더
-#         price_range = st.slider(
-#             "1인 기준 가격대를 선택해주세요",
-#             min_value=5000,
-#             max_value=100000,
-#             value=(5000, 50000),  # Default range
-#             step=5000,
-#             format="₩%d",
-#         )
+    if message:
+        ss.messages.append({"role": "user", "content": message, "avatar": "🧑‍💻"})
+        parsed_query.message = message
+        chat_state.update(parsed_query=parsed_query)
+        try:
+            chat_mode = parsed_query.chat_mode
+            status = st.status(status_config[chat_mode]["thinking.header"])
+            status.write(status_config[chat_mode]["thinking.body"])
+        except KeyError:
+            status = None
 
-    # st.write(f"선택된 가격대: ₩{price_range[0]} ~ ₩{price_range[1]}")
-        
+        # Prepare container and callback handler for showing streaming response
+        message_placeholder = st.empty()
 
-def ref_dropdown():
-    # Default mode
-    with st.expander("진로 선택", expanded=False):
-        ss.default_mode = st.selectbox(
-            "진로를 선택해주시면 더 맞춤형 서비스를 제공해드리겠습니다.",
-            mode_options,
-            index=0,
-            # label_visibility="collapsed",
+        cb = CallbackHandlerDDGStreamlit(
+            message_placeholder,
+            end_str=STAND_BY_FOR_INGESTION_MESSAGE
         )
-        cmd_prefix, cmd_prefix_explainer, _ = career_options[ss.default_mode]
-        st.caption(cmd_prefix_explainer)
+        chat_state.callbacks[1] = cb
+        chat_state.add_to_output = lambda x: cb.on_llm_new_token(x, run_id=None)                
+        print('여기까진 옴', cb)
+        response = get_bot_response(chat_state)
+        print('여기까지도 옴', type(response))
+        answer = response
+
+
+        # Display the "complete" status - custom or default
+        if status:
+            default_status = status_config.get(chat_mode, just_chat_status_config)
+            status.update(
+                label=response.get("status.header", default_status["complete.header"]),
+                state="complete",
+            )
+            status.write(response.get("status.body", default_status["complete.body"]))
+
+        # Add the response to the chat history
+        chat_state.chat_history.append((message, answer))
+
+
+        # 메시지 표시를 여기에서 제거했습니다.
+        return answer
+def display_messages():
+    print('랄랄라')
+    if "messages" not in ss:
+        ss.messages = []
+    for message_dict in ss.messages:
         
-def side_bar():
-    ####### Sidebar #######
-    with st.sidebar:
-        st.subheader("Myfolio 상담 봇 " + VERSION)
+        with st.chat_message(message_dict["role"], avatar=message_dict.get("avatar", "")):
+            st.markdown(message_dict["content"])
 
-        # chat_state 설정 
-        chat_state.selected_career_groups = [list(career_options.keys())[1]]
-        chat_state.counsel_type = None
-        chat_state.selected_foods = []
+def main():
+    if tmp := os.getenv("STREAMLIT_WARNING_NOTIFICATION"):
+        st.warning(tmp)    
 
+    # 세션 상태에 페이지 상태 초기화
+    if 'stage' not in ss:
+        ss.stage = None
 
-        # user 이름 설정
-        user_id_setting()
-
-        # 멘트 추가 
-        st.write("아래에서 원하시는 항목을 선택해주시면, 더 맞춤형 서비스를 제공해드리겠습니다.")  # 설명을 별도로 추가
-
-        # 차 여부 
-        user_type() 
-
-        # 성별 설정 
-        counsel_type()
-
-        # 진로 설정 
-        career()
-
-        # # 가격대 설정 
-        # price()
-
-        # food_selection
-        food_selection()
+    if 'status' not in ss:
+        ss.status = None
     
+    parsed_query = parse_query("")
+
+    # 메인 앱 페이지
+    title_header(logo, "")
+    st.title("Myfolio의 AI 봇과 함께하는 진로/진학 상담 서비스입니다.")
+    # Korean content here
+    st.markdown(GREETING_MESSAGE_KOR)
+    
+    # 날씨, 시간에 따른 인사말을 세션 상태에 저장
+    if 'greeting_message' not in ss:
+        parsed_query.chat_mode = ChatMode.JUST_CHAT_GREETING_ID
+        chat_state.flag = ""
+        chat_state.update(parsed_query=parsed_query)
+        ss.greeting_message = get_bot_response(chat_state)
+    # 사용자 ID에 따른 전체 메시지 생성 
+    if chat_state.user_id is not None:
+        full_message = f"{chat_state.user_id}님 {ss.greeting_message}"
+    else: 
+        full_message = ss.greeting_message
+        st.markdown(format_robot_response(full_message), unsafe_allow_html=True)
+    
+    # 채팅 히스토리에 메시지 추가 (필요한 경우)
+    if 'messages' not in ss:
+        ss.messages = []
+    
+    # if not ss.messages:
+    #     ss.messages.append({"role": "assistant", "content": full_message, "avatar": "🦖"})
+    
+    # 메시지를 먼저 표시합니다.
+    display_messages()
+
+    # 대화 흐름 관리
+    if ss.stage is None:
+        print('stage: None', ss.messages)
+        message = '어떤 고민이 있으신가요? 아래 버튼을 선택해주세요'
+        # if not any(msg["content"] == message for msg in ss.messages):
+        ss.messages.append({"role": "assistant", "content": message, "avatar": "🦖"})
+            # 메시지를 다시 표시합니다.
+        with st.chat_message('assistant'):
+            print('with', message)
+            st.write(message)
+        # col1= st.columns(1)
+        # with col1:
+        career_button = st.button('진로 상담하기')
+        # with col2:
+        #     st.markdown("""
+        #     <style>
+        #         진학 상담 업데이트 예정
+        #     </style>
+        #     """, unsafe_allow_html=True)
+        if career_button:
+            ss.messages.pop()
+            ss.stage = 'career_ask_desired_job'
+            ss.messages.append({"role": "user", "content": "진로 선택", "avatar": "🧑‍💻"})
+            st.rerun()
+        # elif school_button:
+        #     ss.messages.pop()
+        #     ss.stage = 'academic_ask_desired_major'
+        #     ss.messages.append({"role": "user", "content": "진학 선택", "avatar": "🧑‍💻"})
+        #     st.rerun()
+
+    elif ss.stage == 'career_ask_desired_job':
+        print('stage: career_ask_desired_job')
+        message = '희망하는 직업이 있나요?'
+        # if not any(msg["content"] == message for msg in ss.messages):
+        # print('메세지 나옴 career_ask_desired_job')
+        ss.messages.append({"role": "assistant", "content": message, "avatar": "🦖"})
+        print('여기보셈 1-------', ss.messages)
+        with st.chat_message('assistant'):
+        #     print('메세지 나옴 career_ask_desired_job2')
+            st.write(message)
+        col1, col2 = st.columns(2)
+        with col1:
+            yes_button = st.button('예')
+        with col2:
+            no_button = st.button('아니오')
+        if yes_button:
+            
+            ss.messages.pop()
+            print('여기보셈 2-------', ss.messages)
+            ss.stage = 'career_get_desired_job'
+            ss.messages.append({"role": "user", "content": "예", "avatar": "🧑‍💻"})
+            print('여기보셈 3-------', ss.messages)
+            st.rerun()
+        elif no_button:
+            ss.messages.pop()
+            ss.stage = 'career_no_options'
+            ss.messages.append({"role": "user", "content": "아니오", "avatar": "🧑‍💻"})
+            st.rerun()
+
+    elif ss.stage == 'career_get_desired_job':
+        print('stage: career_get_desired_job')
+        message = '희망하는 직업을 작성해주세요'
+        if not any(msg["content"] == message for msg in ss.messages):
+        # print('메세지 나옴 get_desired_job')
+            ss.messages.append({"role": "assistant", "content": message, "avatar": "🦖"})
+            with st.chat_message('assistant'):
+            #     print('메세지 나옴 get_desired_job2')
+                st.write(message)        
+        desired_job = st.text_input('희망하는 직업')
+        if desired_job:
+            if not any(msg["content"] == desired_job for msg in ss.messages):
+                ss.messages.append({"role": "user", "content": desired_job, "avatar": "🧑‍💻"})
+            parsed_query.message = desired_job
+            parsed_query.chat_mode = ChatMode.CAREER_CHAT_COMMAND_ID
+            chat_state.update(parsed_query=parsed_query)
+            print('여기닷')
+            result = open_ai_chat(parsed_query=parsed_query, message=desired_job)
+            result = json_format(result)
+            print('들어간다1')
+            if result['type'] == 'FAILED':
+                print('들어감1')
+                ss.messages.append({"role": "assistant", "content": result['response'], "avatar": "🦖"})
+                    # 메시지를 다시 표시합니다.
+                with st.chat_message('assistant'):
+                    st.write(result['response'])
+                desired_job = None
+                ss.stage = 'career_get_desired_job'
+                # ss.stage = None
+                st.rerun()
+            elif result['type'] == 'SUCCESS':
+                ss.messages.pop()
+                print('들어감2')
+                message = f"{result['response']}와 비슷한 직업을 찾았습니다. 아래 중에서 골라주세요."
+                # if not any(msg["content"] == result['response'] for msg in ss.messages):
+                ss.messages.append({"role": "assistant", "content": message, "avatar": "🦖"})
+                print('\n\n\n\n메세지 차이 보기', ss.messages)
+                with st.chat_message('assistant'):
+                    st.write(message)
+
+                ret_result = retriever.invoke(result['response'])
+                print('keys~:',ret_result[0].metadata.keys() )
+                print('ret_result:', ret_result)
+                col1, col2, col3,col4, col5 = st.columns(5)
+                # ss.messages.append(ret_result)
+                with col1:
+                    bttn1 = st.button(ret_result[0].metadata['name'])
+                    # ss.messages.pop()
+                with col2:
+                    bttn2 = st.button(ret_result[1].metadata['name'])
+                with col3:
+                    bttn3 = st.button(ret_result[2].metadata['name'])
+                with col4:
+                    bttn4 = st.button(ret_result[3].metadata['name'])
+                with col5:
+                    bttn5 = st.button(ret_result[4].metadata['name'])
+                # 각 버튼의 동작을 정의
+                if bttn1:
+                    ss.messages.pop()
+                    ss.stage = 'research'
+                    ss.messages.append({"role": "user", "content": ret_result[0].metadata['name'], "avatar": "🧑‍💻"})
+                    ss.status = ret_result[0].metadata
+                    st.rerun()
+                elif bttn2:
+                    ss.messages.pop()
+                    ss.stage = 'research'
+                    ss.messages.append({"role": "user", "content": ret_result[1].metadata['name'], "avatar": "🧑‍💻"})
+                    ss.status = ret_result[1].metadata
+                    st.rerun()
+                elif bttn3:
+                    ss.messages.pop()
+                    ss.stage = 'research'
+                    ss.messages.append({"role": "user", "content": ret_result[2].metadata['name'], "avatar": "🧑‍💻"})
+                    ss.status = ret_result[2].metadata
+                    st.rerun()
+                elif bttn4:
+                    ss.messages.pop()
+                    ss.stage = 'research'
+                    ss.messages.append({"role": "user", "content": ret_result[3].metadata['name'], "avatar": "🧑‍💻"})
+                    ss.status = ret_result[3].metadata
+                    st.rerun()
+                elif bttn5:
+                    ss.messages.pop()
+                    ss.stage = 'research'
+                    ss.messages.append({"role": "user", "content": ret_result[4].metadata['name'], "avatar": "🧑‍💻"})
+                    ss.status = ret_result[4].metadata
+                    st.rerun()
+
+    elif ss.stage == "research":
+        print('보쇼', ss.status)
+        info_box = url_setting(ss.status)
+        st.markdown(info_box, unsafe_allow_html=True)
+        desired_job = None
+        ss.stage = None
+        ss.messages = []
+        st.button('다시하기')
+
+    elif ss.stage == 'career_no_options':
+        message = '어떤 내용으로 진로 상담을 진행할까요? 하나를 선택해주세요'
+        if not any(msg["content"] == message for msg in ss.messages):
+            print('메세지뜸')
+            ss.messages.append({"role": "assistant", "content": message, "avatar": "🦖"})
+        with st.chat_message('assistant'):
+            st.write(message)            
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            strength_button = st.button('강점')
+        with col2:
+            interest_button = st.button('관심 지식')
+        with col3:
+            work_env_button = st.button('업무 환경')
+        if strength_button:
+            ss.messages.append({"role": "user", "content": "강점", "avatar": "🧑‍💻"})
+            parsed_query.message = '강점'
+            parsed_query.chat_mode = ChatMode.CAREER_CHAT_COMMAND_ID
+            chat_state.update(parsed_query=parsed_query)
+            open_ai_chat(parsed_query=parsed_query, message='강점')
+            # ss.stage = None
+            st.rerun()
+        elif interest_button:
+            ss.messages.append({"role": "user", "content": "관심 지식", "avatar": "🧑‍💻"})
+            parsed_query.message = '관심 지식'
+            parsed_query.chat_mode = ChatMode.CAREER_CHAT_COMMAND_ID
+            chat_state.update(parsed_query=parsed_query)
+            open_ai_chat(parsed_query=parsed_query, message='관심 지식')
+            ss.stage = None
+            st.rerun()
+        elif work_env_button:
+            ss.messages.append({"role": "user", "content": "업무 환경", "avatar": "🧑‍💻"})
+            parsed_query.message = '업무 환경'
+            parsed_query.chat_mode = ChatMode.CAREER_CHAT_COMMAND_ID
+            chat_state.update(parsed_query=parsed_query)
+            open_ai_chat(parsed_query=parsed_query, message='업무 환경')
+            ss.stage = None
+            st.rerun()
+
+    elif ss.stage == 'academic_ask_desired_major':
+        message = '희망하는 학과, 전공이 있으신가요?'
+        if not any(msg["content"] == message for msg in ss.messages):
+            ss.messages.append({"role": "assistant", "content": message, "avatar": "🦖"})
+        with st.chat_message('assistant'):
+            st.write(message)            
+        col1, col2 = st.columns(2)
+        with col1:
+            yes_button = st.button('예')
+        with col2:
+            no_button = st.button('아니오')
+        if yes_button:
+            ss.stage = 'academic_get_desired_major'
+            ss.messages.append({"role": "user", "content": "예", "avatar": "🧑‍💻"})
+            st.rerun()
+        elif no_button:
+            ss.stage = 'academic_no_options'
+            ss.messages.append({"role": "user", "content": "아니오", "avatar": "🧑‍💻"})
+            st.rerun()
+
+    elif ss.stage == 'academic_get_desired_major':
+        message = '희망하는 학과를 입력해주세요'
+        if not any(msg["content"] == message for msg in ss.messages):
+            ss.messages.append({"role": "assistant", "content": message, "avatar": "🦖"})
+        with st.chat_message('assistant'):
+            st.write(message)            
+        desired_major = st.text_input('희망하는 학과')
+        if desired_major:
+            ss.messages.append({"role": "user", "content": desired_major, "avatar": "🧑‍💻"})
+            parsed_query.message = desired_major
+            parsed_query.chat_mode = ChatMode.SCHOOL_CHAT_COMMAND_ID
+            chat_state.update(parsed_query=parsed_query)
+            open_ai_chat(parsed_query=parsed_query, message=desired_major)
+            ss.stage = None
+            st.rerun()
+
+    elif ss.stage == 'academic_no_options':
+        message = '어떤 내용으로 진학 상담을 진행할까요? 하나를 선택해주세요'
+        if not any(msg["content"] == message for msg in ss.messages):
+            ss.messages.append({"role": "assistant", "content": message, "avatar": "🦖"})
+            
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            grades_button = st.button('성적')
+        with col2:
+            major_selection_button = st.button('전공 선택')
+        with col3:
+            university_selection_button = st.button('대학 선택')
+        if grades_button:
+            ss.messages.append({"role": "user", "content": "성적", "avatar": "🧑‍💻"})
+            parsed_query.message = '성적'
+            parsed_query.chat_mode = ChatMode.SCHOOL_CHAT_COMMAND_ID
+            chat_state.update(parsed_query=parsed_query)
+            open_ai_chat(parsed_query=parsed_query, message='성적')
+            ss.stage = None
+            st.rerun()
+        elif major_selection_button:
+            ss.messages.append({"role": "user", "content": "전공 선택", "avatar": "🧑‍💻"})
+            parsed_query.message = '전공 선택'
+            parsed_query.chat_mode = ChatMode.SCHOOL_CHAT_COMMAND_ID
+            chat_state.update(parsed_query=parsed_query)
+            open_ai_chat(parsed_query=parsed_query, message='전공 선택')
+            ss.stage = None
+            st.rerun()
+        elif university_selection_button:
+            ss.messages.append({"role": "user", "content": "대학 선택", "avatar": "🧑‍💻"})
+            parsed_query.message = '대학 선택'
+            parsed_query.chat_mode = ChatMode.SCHOOL_CHAT_COMMAND_ID
+            chat_state.update(parsed_query=parsed_query)
+            open_ai_chat(parsed_query=parsed_query, message='대학 선택')
+            ss.stage = None
+            st.rerun()
+
+    # 항상 메시지 입력창 제공
+    print('여기도!!')
+    # open_ai_chat(parsed_query=parsed_query)
+
 def title_header(logo, title):
     # 이미지와 제목을 포함한 컨테이너 생성
     header = st.container()
@@ -359,153 +587,10 @@ def title_header(logo, title):
         with col2:
             # 두 번째 열에 제목 텍스트 표시
             st.markdown(f"# {title}")  # 큰 글씨로 제목 표시
-        #fff3e0
+
 def format_robot_response(message):
     return f'''<div style="background-color: #f0f0f0; padding: 15px; border-radius: 8px; border: 1px solid #ffb74d; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #e65100; box-shadow: 0 4px 8px rgba(0,0,0,0.1); font-size: 16px;">
         <strong>🍊:</strong> {message} </div>'''
-        
-def main():
-    if tmp := os.getenv("STREAMLIT_WARNING_NOTIFICATION"):
-        st.warning(tmp)    
-
-    side_bar()
-
-    # # 로고 이미지 로드
-    # logo = Image.open("media/탐라logo_w_horizon.png")
-
-    parsed_query = parse_query("")
-
-    # 세션 상태에 페이지 상태 초기화
-    if 'page' not in ss:
-        ss.page = 'user_select'
-    
-    # 언어 선택 페이지
-    if ss.page == 'user_select':
-        st.title("환영합니다 / Welcome!")
-        st.write("안녕하세요! 마이폴리오 chat입니다. 상담을 원하시면 아래 상담시작 버튼을 눌러주세요!")
-        
-        col1= st.columns(1)[0]
-        
-        with col1:
-            if st.button("상담 시작!", use_container_width=True):
-                ss.language = "상담 시작!"
-                ss.page = 'main_app'
-                st.rerun()
-        
-        # with col2:
-        #     if st.button("학부모", use_container_width=True):
-        #         ss.language = "학부모"
-        #         ss.page = 'main_app'
-        #         st.rerun()
-
-        # with col3:
-        #     if st.button("교사", use_container_width=True):
-        #         ss.language = "교사"
-        #         ss.page = 'main_app'
-        #         st.rerun()
-
-
-    # 메인 앱 페이지
-    elif ss.page == 'main_app':
-        if ss.language == "English":
-            title_header(logo, "")
-            st.title("Welcome to the Culinary Journey with Tamna's Flavor AI!")
-            # English content here
-            st.markdown(GREETING_MESSAGE_ENG)
-
-            # 날씨, 시간에 따른 인사말을 세션 상태에 저장
-            if 'greeting_message' not in ss:
-                parsed_query.chat_mode = ChatMode.JUST_CHAT_GREETING_ID
-                chat_state.flag = "영어로"
-                chat_state.update(parsed_query=parsed_query)
-                ss.greeting_message = get_bot_response(chat_state)
-            
-            # 사용자 ID에 따른 전체 메시지 생성 
-            if chat_state.user_id is not None:
-                full_message = f"{chat_state.user_id}님 {ss.greeting_message}"
-            else: 
-                full_message = ss.greeting_message
-            
-            # 채팅 히스토리에 메시지 추가 (필요한 경우)
-            if full_message not in [msg for msg, _ in chat_state.chat_history]:
-                chat_state.chat_history.append((full_message, ""))
-                chat_state.chat_history_all.append((None, full_message))
-                chat_state.sources_history.append(None)
-
-            st.markdown(format_robot_response(full_message), unsafe_allow_html=True)
-            
-            # st.write(
-            #     "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-            #     "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys)."
-            # )
-
-            # Show sample queries
-            clicked_sample_query = None
-            for _ in range(2):
-                st.write("")
-            for i, (btn_col, sample_query) in enumerate(zip(st.columns(2), ss.sample_queries)):
-                with btn_col:
-                    if st.button(sample_query, key=f"query{i}"):
-                        clicked_sample_query = sample_query
-            
-            open_ai_chat(parsed_query=parsed_query, eng_flag=True)
-        
-        else:
-            title_header(logo, "")
-            st.title("Myfolio의 AI 봇과 함께하는 진로/진학 상담 서비스입니다.")
-            # Korean content here
-            st.markdown(GREETING_MESSAGE_KOR)
-
-            # 날씨, 시간에 따른 인사말을 세션 상태에 저장
-            if 'greeting_message' not in ss:
-                parsed_query.chat_mode = ChatMode.JUST_CHAT_GREETING_ID
-                chat_state.flag = ""
-                chat_state.update(parsed_query=parsed_query)
-                ss.greeting_message = get_bot_response(chat_state)
-            
-            # 사용자 ID에 따른 전체 메시지 생성 
-            if chat_state.user_id is not None:
-                full_message = f"{chat_state.user_id}님 {ss.greeting_message}"
-            else: 
-                full_message = ss.greeting_message
-            
-            # 채팅 히스토리에 메시지 추가 (필요한 경우)
-            if full_message not in [msg for msg, _ in chat_state.chat_history]:
-                chat_state.chat_history.append((full_message, ""))
-                chat_state.chat_history_all.append((None, full_message))
-                chat_state.sources_history.append(None)
-
-            st.markdown(format_robot_response(full_message), unsafe_allow_html=True)
-
-            # Show sample queries
-            clicked_sample_query = None
-            # for _ in range(2):
-            #     st.write("")
-            # for i, (btn_col, sample_query) in enumerate(zip(st.columns(2), ss.sample_queries_kor)):
-            #     with btn_col:
-            #         if st.button(sample_query, key=f"query{i}"):
-            #             clicked_sample_query = sample_query   
-            print('여여여여기', chat_state.chat_mode)
-            with st.chat_message('assistant'):
-                st.write('어떤 고민이 있으신가요? 아래 버튼을 선택해주세요')
-                career = st.button('진로(직업)')
-                school = st.button('진학')
-
-                # if career:
-                #     st.
-            if career:
-                print('여까진 옴')
-                parsed_query.chat_mode =  ChatMode.CAREER_CHAT_COMMAND_ID
-                chat_state.update(parsed_query=parsed_query)
-                with st.chat_message('assistant'):
-                    st.write('원하시는 진로/직업 분야가 있으신가요? 진로/직업관련 어떤 고민인지 알려주세요!')
-
-            elif school:
-                parsed_query.chat_mode =  ChatMode.SCHOOL_CHAT_COMMAND_ID
-                chat_state.update(parsed_query=parsed_query)
-
-            print('dkdkdkdk', parsed_query)
-            open_ai_chat(parsed_query=parsed_query)
 
 if __name__ == '__main__':
     main()  

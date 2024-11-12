@@ -48,21 +48,29 @@ class CallbackHandlerDDGStreamlit(BaseCallbackHandler):
     ) -> None:
         """Run when LLM ends running."""
         if self.end_str:
-            self.end_str_printed = True
+            self.end_str_printed = False
             self.container.markdown(fix_markdown(self.buffer + self.end_str))
 
 def get_llm_with_gemini(
     settings: BotSettings, api_key: str | None = None, callbacks: CallbacksOrNone = None
 ) -> BaseChatModel:
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash",
-        google_api_key=api_key,  # 여기에 실제 API 키를 입력하세요
+    # llm = ChatGoogleGenerativeAI(
+    #     model="gemini-1.5-flash",
+    #     google_api_key=api_key,  # 여기에 실제 API 키를 입력하세요
+    #     temperature=settings.temperature,
+    #     request_timeout=LLM_REQUEST_TIMEOUT,
+    #     streaming=True,
+    #     callbacks=callbacks,
+    #     verbose=True,  # tmp
+    llm = ChatOpenAI(
+        model="gpt-4o-mini",
+        api_key="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",
         temperature=settings.temperature,
         request_timeout=LLM_REQUEST_TIMEOUT,
         streaming=True,
-        callbacks=callbacks,
-        verbose=True,  # tmp
-    )
+        # callbacks=callbacks,
+        # verbose=True,  # tmp
+)
     return llm
 
 
@@ -119,6 +127,7 @@ def get_llm(
     """
     if callbacks is None:
         callbacks = [CallbackHandlerDDGConsole(init_str)] if stream else []
+        print('콜백지나감')
     return get_llm_with_gemini(settings, api_key, callbacks)
 
 
@@ -132,6 +141,7 @@ def get_prompt_llm_chain(
 ):
     
     if not print_prompt:
+        print('프롬프트는 이거')
         return prompt | get_llm(llm_settings, api_key, **kwargs) | StrOutputParser()
 
     def print_and_return(thing):
@@ -141,11 +151,11 @@ def get_prompt_llm_chain(
             print(f"PROMPT:\n{type(thing)}\n{thing}")
         print(DELIMITER)
         return thing
-    
+    print('프롬프트는 이거1')
     return (
         
         prompt
-        | print_and_return
+        # | print_and_return
         | get_llm(llm_settings, api_key, **kwargs)
         | StrOutputParser()
     )
