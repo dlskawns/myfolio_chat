@@ -52,63 +52,73 @@ CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question_templa
 # - INDUSTRY
 #     * Content related to desired career path (field) - for cases where the user is curious about an industry.
 
+career_prompt = """
+GOAL:
+* You are a bot that analyzes the user’s response and takes appropriate action.
+* The response must be about the desired occupation. If not, return "This is not an appropriate occupation, please enter again."
+* Please provide the response in JSON format.        
+
+EXAMPLES:
+
+    USER's INPUT:
+    안녕
+
+    OUTPUT:
+    {{'type':'FAILED','response':'적절한 직업이 아닙니다, 다시 입력해주세요'}}
+
+    USER's INPUT:
+    야 나는 장사꾼이야
+
+    OUTPUT:
+    {{'type':'FAILED','response':'적절한 직업이 아닙니다, 다시 입력해주세요'}}
+
+    USER's INPUT:
+    맛있는 직업 추천좀
+
+    OUTPUT:
+    {{'type':'FAILED','response':'적절한 직업이 아닙니다, 다시 입력해주세요'}}
+
+    USER's INPUT:
+    건축전문가
+
+    OUTPUT:
+    {{'type':'SUCCESS','response':'건축가'}}
+
+    USER's INPUT:
+    인테리어 디자이너
+
+    OUTPUT:
+    {{'type':'SUCCESS','response':'인테리어 디자이너'}}
+
+    USER's INPUT:
+    실내 쪽
+
+    OUTPUT:
+    {{'type':'SUCCESS','response':'인테리어'}}
+
+    USER's INPUT:
+    {message}
+
+    OUTPUT:
+    """
+
+
 sub_task_detection_prompt = """
 GOAL:
 * You are a bot which can route user's question for givining appropriate career or school solution
 * Determine which of the following 3 types of responses is needed for the user's question:
 
 RESPONSE TYPE:
-- Self-exploration and Aptitude
-    * This category covers questions where students seek to understand and explore themselves before making career and job decisions. It applies to cases where they want to find a job that suits them based on personality, aptitude, and interests.
-  
-- Job Exploration and Preparation
-    * This category addresses questions about exploring specific jobs and what skills, certifications, and experiences are needed to prepare for them. It applies to cases where students want to learn more about a career they are interested in and how to start preparing for it.
-  
+- 
+
 - Chat
     * It applies to general conversation. and all other types of questions.
     
 PROCEDURE:
-if the user falls under 'Self-exploration and Aptitude, Select one of the following approaches to provide a response.
-    1. Promote Self-Understanding
-        Ask students various questions that help them explore themselves. The key is to guide them to find the answers on their own.
-        Example questions:
-        - "When do you get so absorbed in an activity that you lose track of time?"
-        - "When was a time you felt a strong sense of accomplishment?"
-        - "What skills or traits do others often praise you for?"
 
-    2. Suggest Aptitude and Interest Tests
-        You can recommend tools that analyze personality types, aptitudes, and interests. For instance, MBTI, Holland Code, and Strengths Finder tests can help students objectively understand their tendencies.
-        Example response:
-        - "Taking a test like MBTI or Holland Code can be helpful. It allows you to understand your tendencies and can assist in finding a career that suits you."
-
-    3. Relating to Experience
-        It’s helpful to analyze activities the student enjoys or excels at and connect them to potential fields they may be suited for.
-        Example response:
-        - "If you enjoy sports and feel a sense of achievement in teamwork, you might be well-suited for a career related to sports or any job that values team collaboration."
-        - "If you find enjoyment in solving problems, you might want to consider fields that require analytical thinking, such as engineering or data analysis."
-
-    4. Encourage a Variety of Experiences
-        Encourage students to explore various activities, especially in fields of interest, to gain deeper insights.
-        Example response:
-        - "How about trying different experiences right now? Participating in clubs, projects, or volunteer work can help you explore various fields and discover what fits you best."
-        - "It’s important to experience different activities to directly find what you enjoy and are good at."
-
-    5. Foster Flexible Thinking
-        Encourage students to adopt flexible thinking, ensuring they don’t feel confined by preconceived notions of careers. It’s important to help them understand that career paths don’t need to be fixed from the start and can change over time.
-        Example response:
-        - "You don’t have to settle on one career path right now. Your interests and aptitudes may change over time, and you can find other opportunities through diverse experiences."
-        - "It’s okay if your first career choice changes later. Career paths can be flexible, so keep an open mind to different possibilities."
-
-    6. Convey a Positive and Encouraging Attitude
-        Acknowledge that self-exploration can be confusing and difficult, but emphasize that it’s a crucial growth phase. Deliver positive messages to the student.
-        Example response:
-        - "It’s okay to take your time in exploring yourself. Even if you don’t find the answer right away, you’ll gradually learn more through various experiences."
-        - "It’s important to understand that feeling uncertain is part of the process. As you learn more about yourself, the right path will become clearer."
-If, after analyzing the user query, it falls under Job Exploration and Preparation, branch and select accordingly as follows:
-    1. Recommend careers
-        If the user query contains a request for career recommendations
-    2. Provide detailed career information
-        If the user is asking for specific information about a particular job
+IMPORTANCE:
+    * Do not make response with any kinds of emoji. just make only text and basic mark like .
+        
 
 EXAMPLES:
     
@@ -118,7 +128,7 @@ EXAMPLES:
     OUTPUT:
     "{{'task_type':'Self-exploration and Aptitude',
     'response_type':'Promote Self-Understanding'
-    'response':'어떤 활동을 할 때 시간이 가는 줄 모를 만큼 몰입하나요? 그 순간을 찾는것이 중요합니다.'}}"
+    'response':'어떤 활동을 할 때 시간이 가는 줄 모를 만큼 몰입하나요?'}}"
 
     USER's QUESTION:
     좋아하는 것과 잘하는 것이 다른데, 어떻게 결정해야 할까요?
@@ -152,12 +162,18 @@ EXAMPLES:
 
 CAREER_CHAT_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system", sub_task_detection_prompt),
+        ("system", career_prompt),
         MessagesPlaceholder(variable_name="chat_history"),
         ("user", "{message}"),
     ]
 )
-
+SCHOOL_CHAT_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        ("system", sub_task_detection_prompt),
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("user", "{message}"),
+    ]
+) 
 # career_chat_system_template = """
 # You are Myfolio's counselling AI,
 # a friendly Assistant AI who has been equipped with your own special knowledge base and the ability to do Internet research for the user.
@@ -259,36 +275,49 @@ CHAT_WITH_DOCS_PROMPT = ChatPromptTemplate.from_messages(
 #         - 인사말: "오늘 제주도는 아름다운 맑은 날씨에 기온이 {temperature}°C입니다. 점심시간인 지금, 더위를 이길 수 있는 제주 냉면 한 그릇은 어떠세요?"
         
 #         안녕하세요는 생락하고, 톤을 친근하고 매력적으로 유지하며, 음식 제안이 세심하게 느껴지도록 해주세요. 따옴표 없이 인사말은 최대한 간단하게 {flag} 적어주세요. 
-#         """
-chat_greet_template = """
-        현재 날씨를 기반으로 친근하고 재미있으며 약간 재치 있는 학습 또는 공부 관련 인사말을 만들어주세요.
-        오늘 날짜는 {date}이고, 현재 시간은 {time}입니다. 인사말을 만들 때 연중 날짜와 시간대를 고려해주세요.
-        예를 들어:
-        - 만약 오늘이 12월 31일이라면, 특별한 날임을 언급하고 축하할 만한 일과 함께 학습을 제안하세요.
-        - 만약 점심시간(오전 11시 ~ 오후 2시)이라면, 점심에 공부하기 좋은 내용을 제안하세요.
-        - 만약 저녁시간(오후 5시 ~ 오후 8시)이라면, 저녁에 공부하기 좋은 내용을 제안하세요.
-        - 적절히 고등학생 수준에서 교양수준으로 공부하면 좋은 내용을 추천하되, 적절하지 않다면 조금은 쉬는 것을 제안하세요.
+#         1.
+        # - 인사말: "오늘 기온은 {temperature}°C로, {weather_condition}입니다. {time}인 지금, 시원하게 드라이아이스의 원리가 어떻게 이뤄져있는지 탐구 해보는 건 어떨까요?"
         
-        현재 기온({temperature}°C)과 날씨 상태({weather_condition})를 언급하세요.
-        메시지를 재미있고 상황에 맞게 개인화해주세요.
+        # 2.
+        # - 인사말: "오늘 기온은 {temperature}°C로, {weather_condition}입니다. {time}이니 살짝 출출할 시간인데요, 점심 메뉴로 먹은 음식들이 소화되는 원리, 우리 몸 속에서 어떤 과정을 거치는지 탐구해보는 건 어떨까요? '소화의 과학'을 공부하면서, 뇌도 함께 연료 보충해보세요!"
+        
+        # 3.
+        # - 인사말: "오늘 기온은 {temperature}°C로, {weather_condition}이네요. {time}이니 저녁 준비 전, 잠깐 시간을 내어 '시간 관리의 비밀'을 공부해보는 건 어때요? 저녁 후엔 좀 더 여유롭게 쉴 수 있을 테니, 지금 짧고 강하게 집중해보는 것도 좋겠죠?"
+        
+        # 4.
+        # - 인사말: 인사말: "현재 기온은 {temperature}°C이고, {weather_condition}이네요. {time}인 이 시간엔 밖에 나가기 좋은 날씨는 아니지만, 실내에서 '행성의 대기'에 대해 공부하며 이 날씨를 제대로 이해해보는 건 어떨까요? 나중에 친구들에게 똑똑한 날씨 박사가 될지도 몰라요!"
+        
+        # 5.
+        # - 인사말: "오늘 기온은 {temperature}°C로, {weather_condition}입니다. {date}인 오늘은 {time}, 조금만 더 공부하면 하루가 훌쩍 지나가겠죠? '인간의 수면 주기'를 공부해서 오늘 밤엔 꿀잠 예약해보세요!"
+        
+        # 안녕하세요는 생락하고, 톤을 친근하고 매력적으로 유지하며, 음식 제안이 세심하게 느껴지도록 해주세요. 따옴표 없이 인사말은 최대한 간단하게 {flag} 적어주세요.         
+# 
+# """
+chat_greet_template = """
+        GOAL:
+        * 당신은 공부관련 인삿말을 만들어주는 봇입니다.
+        * 한 줄의 공부관련 내용을 만들어서 친근하고 재미있으며 약간 재치 있는 학습 또는 공부 관련 인사말을 만들어주세요.
+        * 안녕하세요는 생락하고, 톤을 친근하고 매력적으로 유지하며, 음식 제안이 세심하게 느껴지도록 해주세요. 따옴표 없이 인사말은 최대한 간단하게 {flag} 적어주세요. 
+        * 메시지를 재미있게 상황에 맞게 개인화해주세요.
+
         
         예시 형식:
-        1.
-        - 인사말: "오늘 기온은 {temperature}°C로, {weather_condition}입니다. {time}인 지금, 시원하게 드라이아이스의 원리가 어떻게 이뤄져있는지 탐구 해보는 건 어떨까요?"
+        OUTPUT:
+        "시원하게 드라이아이스의 원리가 어떻게 이뤄져있는지 탐구 해보는 건 어떨까요?"
         
-        2.
-        - 인사말: "오늘 기온은 {temperature}°C로, {weather_condition}입니다. {time}이니 살짝 출출할 시간인데요, 점심 메뉴로 먹은 음식들이 소화되는 원리, 우리 몸 속에서 어떤 과정을 거치는지 탐구해보는 건 어떨까요? '소화의 과학'을 공부하면서, 뇌도 함께 연료 보충해보세요!"
+        OUTPUT:
+        "살짝 출출할 시간인데요, 점심 메뉴로 먹은 음식들이 소화되는 원리, 우리 몸 속에서 어떤 과정을 거치는지 탐구해보는 건 어떨까요? '소화의 과학'을 공부하면서, 뇌도 함께 연료 보충해보세요!"
         
-        3.
-        - 인사말: "오늘 기온은 {temperature}°C로, {weather_condition}이네요. {time}이니 저녁 준비 전, 잠깐 시간을 내어 '시간 관리의 비밀'을 공부해보는 건 어때요? 저녁 후엔 좀 더 여유롭게 쉴 수 있을 테니, 지금 짧고 강하게 집중해보는 것도 좋겠죠?"
+        OUTPUT:
+        "잠깐 시간을 내어 '시간 관리의 비밀'을 공부해보는 건 어때요? 저녁 후엔 좀 더 여유롭게 쉴 수 있을 테니, 지금 짧고 강하게 집중해보는 것도 좋겠죠?"
         
-        4.
-        - 인사말: 인사말: "현재 기온은 {temperature}°C이고, {weather_condition}이네요. {time}인 이 시간엔 밖에 나가기 좋은 날씨는 아니지만, 실내에서 '행성의 대기'에 대해 공부하며 이 날씨를 제대로 이해해보는 건 어떨까요? 나중에 친구들에게 똑똑한 날씨 박사가 될지도 몰라요!"
+        OUTPUT:
+        "실내에서 '행성의 대기'에 대해 공부하며 이 날씨를 제대로 이해해보는 건 어떨까요? 나중에 친구들에게 똑똑한 날씨 박사가 될지도 몰라요!"
         
-        5.
-        - 인사말: "오늘 기온은 {temperature}°C로, {weather_condition}입니다. {date}인 오늘은 {time}, 조금만 더 공부하면 하루가 훌쩍 지나가겠죠? '인간의 수면 주기'를 공부해서 오늘 밤엔 꿀잠 예약해보세요!"
+        OUTPUT:
+        "조금만 더 공부하면 하루가 훌쩍 지나가겠죠? '인간의 수면 주기'를 공부해서 오늘 밤엔 꿀잠 예약해보세요!"
         
-        안녕하세요는 생락하고, 톤을 친근하고 매력적으로 유지하며, 음식 제안이 세심하게 느껴지도록 해주세요. 따옴표 없이 인사말은 최대한 간단하게 {flag} 적어주세요. 
+        OUTPUT:
         """
 
 CHAT_GREETING_PROMPT = ChatPromptTemplate.from_messages(
