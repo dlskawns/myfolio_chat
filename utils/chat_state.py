@@ -86,7 +86,8 @@ class ChatState:
         access_code_by_coll_by_user_id: dict[str, dict[str, str]] | None = None,
         uploaded_docs: list[Document] | None = None,
         user_type: str | None = None,
-        selected_career_groups: list[str] | None = None
+        selected_career_groups: list[str] | None = None,
+        docs: str | None = None
         # session_data: AgentDataDict | None = None,  # currently not used (agent
         # data is stored in collection metadata)
     ) -> None: 
@@ -109,6 +110,7 @@ class ChatState:
         self.uploaded_docs = uploaded_docs or []
         self.user_type = user_type
         self.selected_career_groups =selected_career_groups
+        self.docs = docs
     # @property
     # def collection_name(self) -> str:
     #     return self.vectorstore.name

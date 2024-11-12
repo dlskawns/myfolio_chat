@@ -10,14 +10,18 @@ vdb_instance = None
 
 class vectordb:
     def __init__(self):
-        self.bucket_name = "chatbot-myfolio-changsa"
-        self.folder_path = "chroma_db"
-        self.local_path = "/tmp/chroma_db"
+        self.c_bucket_name = "chatbot-myfolio-changsa"
+        self.c_folder_path = "chroma_db"
+        self.c_local_path = "/tmp/chroma_db"
+        self.m_bucket_name = "chatbot-myfolio-shangsa-major"
+        self.m_folder_path = "chroma_db_major"
+        self.m_local_path = "/tmp/major/chroma_db"
         self.s3 = boto3.client('s3')
-        self.download_s3_folder(self.bucket_name, self.folder_path, self.local_path)
+        self.download_s3_folder(self.c_bucket_name, self.c_folder_path, self.c_local_path)
+        self.download_s3_folder(self.m_bucket_name, self.m_folder_path, self.m_local_path)
         self.embedding = self.embedding_model()
-        self.hugging_vectorstore = Chroma(persist_directory=self.local_path , embedding_function=self.embedding)
-    
+        self.c_hugging_vectorstore = Chroma(persist_directory=self.c_local_path , embedding_function=self.embedding)
+        self.m_hugging_vectorstore = Chroma(persist_directory=self.m_local_path , embedding_function=self.embedding)
     # S3 폴더의 모든 파일을 로컬 경로로 다운로드하는 함수
     def download_s3_folder(self, bucket_name, folder_path, local_path):
         print('vectorDB 다운로드중')

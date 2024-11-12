@@ -103,6 +103,144 @@ EXAMPLES:
     """
 
 
+major_prompt = """
+GOAL:
+* You are a bot that analyzes the user’s response and takes appropriate action.
+* The response must be about the desired major. If not, return "This is not an appropriate major or department, please enter again."
+* Please provide the response in JSON format.        
+
+EXAMPLES:
+
+    USER's INPUT:
+    안녕
+
+    OUTPUT:
+    {{'type':'FAILED','response':'적절한 전공이 아닙니다, 다시 입력해주세요'}}
+
+    USER's INPUT:
+    야 나는 장사꾼이야
+
+    OUTPUT:
+    {{'type':'FAILED','response':'적절한 전공이 아닙니다, 다시 입력해주세요'}}
+
+    USER's INPUT:
+    맛있는 직업 추천좀
+
+    OUTPUT:
+    {{'type':'FAILED','response':'적절한 전공이 아닙니다, 다시 입력해주세요'}}
+
+    USER's INPUT:
+    건축학과
+
+    OUTPUT:
+    {{'type':'SUCCESS','response':'건축학'}}
+
+    USER's INPUT:
+    인테리어 디자인
+
+    OUTPUT:
+    {{'type':'SUCCESS','response':'인테리어 디자인'}}
+
+    USER's INPUT:
+    실내 쪽
+
+    OUTPUT:
+    {{'type':'SUCCESS','response':'실내 디자인'}}
+
+    USER's INPUT:
+    경영
+
+    OUTPUT:
+    {{'type':'SUCCESS','response':'경영학'}}
+
+
+
+    USER's INPUT:
+    {message}
+
+    OUTPUT:
+    """
+
+interest_major_prompt = """
+GOAL:
+* You are a bot that analyzes the user’s response and takes appropriate action.
+* The response must be about the desired major. If not, return "This is not an appropriate major or department, please enter again."
+* The expected User's INPUT is about what the User used to be interested in. if it's not about that, you may just return the not an appropriate major comment
+* If it has 'SUCESS', extract the original expression what the User entered, then think and map it to related keyword in industry to get related majors.
+
+* Please provide the response in JSON format.        
+
+EXAMPLES:
+
+    USER's INPUT:
+    안녕
+
+    OUTPUT:
+    {{'type':'FAILED','response':'적절한 취미 또는 흥미 거리가 아닙니다.'}}
+
+    USER's INPUT:
+    야 나는 장사꾼이야
+
+    OUTPUT:
+    {{'type':'SUCCESS','original': '장사꾼', 'keyword':'장사, 영업'}}
+
+    USER's INPUT:
+    맛있는 직업 추천좀
+
+    OUTPUT:
+    {{'type':'SUCCESS','original': '맛있는 직업', 'keyword':'주방, 요리, 제빵'}}
+
+    USER's INPUT:
+    건축학과
+
+    OUTPUT:
+    {{'type':'SUCCESS','original': '건축학과', 'keyword':'건축'}}
+
+    USER's INPUT:
+    인테리어 디자인
+
+    OUTPUT:
+    {{'type':'SUCCESS','original': '인테리어 디자인', 'keyword':'인테리어, 디자인'}}
+
+    USER's INPUT:
+    실내 쪽
+
+    OUTPUT:
+    {{'type':'SUCCESS','original': '실내', 'keyword':'실내, 디자인'}}
+
+    USER's INPUT:
+    경영
+
+    OUTPUT:
+    {{'type':'SUCCESS','original': '경영', 'keyword':'경영, 운영, 인사'}}
+
+    USER's INPUT:
+    {message}
+
+    OUTPUT:
+    """
+
+response_major_prompt = """
+GOAL:
+* You are a bot that making the answer as related major about entered user's interests.
+* The situation is the user doesn't have any interested job or major. so you have to recommend the searched major information in 'CONTEXT'
+* Refer to the following CONTEXT which is about the majors after search, and make the answer like you are recommending as a career teacher.
+
+CONTEXT:
+{context}
+
+FORMAT:
+* output must be in korean.
+* the tone must be a career teacher.
+
+USER's INPUT:
+{message}
+
+OUTPUT:
+    """
+
+
+
 sub_task_detection_prompt = """
 GOAL:
 * You are a bot which can route user's question for givining appropriate career or school solution
@@ -160,6 +298,14 @@ EXAMPLES:
     OUTPUT:
     """
 
+MAJOR_CHAT_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        ("system", interest_major_prompt),
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("user", "{message}"),
+    ]
+)
+
 CAREER_CHAT_PROMPT = ChatPromptTemplate.from_messages(
     [
         ("system", career_prompt),
@@ -169,7 +315,15 @@ CAREER_CHAT_PROMPT = ChatPromptTemplate.from_messages(
 )
 SCHOOL_CHAT_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system", sub_task_detection_prompt),
+        ("system", major_prompt),
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("user", "{message}"),
+    ]
+) 
+
+RESPONSE_CHAT_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        ("system", response_major_prompt),
         MessagesPlaceholder(variable_name="chat_history"),
         ("user", "{message}"),
     ]

@@ -6,7 +6,7 @@ from utils.prepare import DEFAULT_OPENAI_API_KEY, WEATHER_KEY, get_logger
 from utils.chat_state import ChatState
 from utils.type_utils import OperationMode
 from utils.prompts import ( 
-    JUST_CHAT_PROMPT, CAREER_CHAT_PROMPT, SCHOOL_CHAT_PROMPT
+    JUST_CHAT_PROMPT, CAREER_CHAT_PROMPT, SCHOOL_CHAT_PROMPT, MAJOR_CHAT_PROMPT, RESPONSE_CHAT_PROMPT
 )
 from components.llm import get_prompt_llm_chain
 from utils.lang_utils import pairwise_chat_history_to_msg_list
@@ -59,8 +59,6 @@ def get_bot_response(
             callbacks=chat_state.callbacks,
             stream=True,
         )
-        print('문제:', chat_state.message)
-        print('히스토리:', chat_state.chat_history)
         answer = chat_chain.invoke(
             {   
                 "message": chat_state.message,
@@ -88,6 +86,42 @@ def get_bot_response(
             }
         )
         print('진학모드', answer)
+    elif chat_mode_val == ChatMode.MAJOR_CHAT_COMMAND_ID.value:
+        # MAJOR_CHAT_PROMPT를 사용하여 LLM에 요청
+        chat_chain = get_prompt_llm_chain(
+            MAJOR_CHAT_PROMPT,
+            llm_settings=chat_state.bot_settings,
+            api_key=chat_state.google_api_key,
+            callbacks=chat_state.callbacks,
+            stream=True,
+        )
+        answer = chat_chain.invoke(
+            {   
+                "message": chat_state.message,
+                "chat_history": pairwise_chat_history_to_msg_list(
+                    chat_state.chat_history
+                ),
+            }
+        )
+        print('전공모드', answer)
+    elif chat_mode_val == ChatMode.RESPONSE_CHAT_COMMAND_ID.value:
+        # RESPONSE_CHAT_PROMPT를 사용하여 LLM에 요청
+        chat_chain = get_prompt_llm_chain(
+            RESPONSE_CHAT_PROMPT,
+            llm_settings=chat_state.bot_settings,
+            api_key=chat_state.google_api_key,
+            callbacks=chat_state.callbacks,
+            stream=True,
+        )
+        answer = chat_chain.invoke(
+            {   "context": chat_state.docs,
+                "message": chat_state.message,
+                "chat_history": pairwise_chat_history_to_msg_list(
+                    chat_state.chat_history
+                ),
+            }
+        )
+        print('전공답변모드', answer)
     elif chat_mode_val == ChatMode.JUST_CHAT_GREETING_ID.value:
         print('인사모드', answer)
         return get_greeting_chat_chain(chat_state)
