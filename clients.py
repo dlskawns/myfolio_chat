@@ -16,7 +16,10 @@ class vectordb:
         self.m_bucket_name = "chatbot-myfolio-shangsa-major"
         self.m_folder_path = "chroma_db_major"
         self.m_local_path = "/tmp/major/chroma_db"
-        self.s3 = boto3.client('s3')
+        self.s3 = boto3.client('s3',
+            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+            region_name='AWS_REGION')
         self.download_s3_folder(self.c_bucket_name, self.c_folder_path, self.c_local_path)
         self.download_s3_folder(self.m_bucket_name, self.m_folder_path, self.m_local_path)
         self.embedding = self.embedding_model()
