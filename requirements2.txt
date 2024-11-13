@@ -5,6 +5,7 @@ altair==5.4.1
 annotated-types==0.7.0
 anyio==4.6.0
 asgiref==3.8.1
+async-timeout==4.0.3
 attrs==24.2.0
 backoff==2.2.1
 bcrypt==4.2.0
@@ -24,6 +25,7 @@ Deprecated==1.2.14
 deprecation==2.1.0
 distro==1.9.0
 durationpy==0.9
+exceptiongroup==1.2.2
 fastapi==0.115.4
 filelock==3.16.1
 flatbuffers==24.3.25
@@ -111,6 +113,7 @@ Pygments==2.18.0
 pyparsing==3.2.0
 PyPika==0.48.9
 pyproject_hooks==1.2.0
+pysqlite3==0.5.4
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2024.2
@@ -128,7 +131,6 @@ safetensors==0.4.5
 scikit-learn==1.5.2
 scipy==1.14.1
 sentence-transformers==3.2.1
-setuptools==75.1.0
 shellingham==1.5.4
 six==1.16.0
 smmap==5.0.1
@@ -143,6 +145,7 @@ threadpoolctl==3.5.0
 tiktoken==0.8.0
 tokenizers==0.20.2
 toml==0.10.2
+tomli==2.1.0
 torch==2.2.2
 tornado==6.4.1
 tqdm==4.66.5
@@ -158,8 +161,6 @@ uvloop==0.21.0
 watchfiles==0.24.0
 websocket-client==1.8.0
 websockets==13.1
-wheel==0.44.0
 wrapt==1.16.0
 yarl==1.13.1
 zipp==3.20.2
-#
