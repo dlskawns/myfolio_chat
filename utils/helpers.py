@@ -1,5 +1,5 @@
 import os
-from datetime import UTC, datetime
+# from datetime import UTC, datetime
 
 # from utils.prepare import DEFAULT_MODE
 from utils.type_utils import ChatMode
@@ -391,14 +391,14 @@ RESEARCH_TIMESTAMP_FORMAT = "%A, %B %d, %Y, %I:%M %p"
 DB_CREATED_AT_TIMESTAMP_FORMAT = "%d-%b-%Y %I:%M %p"  # "%B %d, %Y, %I:%M%p UTC"
 
 
-def get_timestamp(format: str | None = DEFAULT_TIMESTAMP_FORMAT):
-    if format is None:
-        return datetime.now(tz=UTC).isoformat()
-    return datetime.now(tz=UTC).strftime(format)
-    # "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+# def get_timestamp(format: str | None = DEFAULT_TIMESTAMP_FORMAT):
+#     if format is None:
+#         return datetime.now(tz=UTC).isoformat()
+#     return datetime.now(tz=UTC).strftime(format)
+#     # "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
 
 
-def parse_timestamp(timestamp: str, format: str | None = DEFAULT_TIMESTAMP_FORMAT):
-    if format is None:
-        return datetime.fromisoformat(timestamp)
-    return datetime.strptime(timestamp, format)
+# def parse_timestamp(timestamp: str, format: str | None = DEFAULT_TIMESTAMP_FORMAT):
+#     if format is None:
+#         return datetime.fromisoformat(timestamp)
+#     return datetime.strptime(timestamp, format)

@@ -6,7 +6,11 @@ from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.embeddings.openai import OpenAIEmbeddings
 
 import streamlit as st
-
+import pysqlite3
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+import streamlit as st
+import sqlite3
 vdb_instance = None
 
 
