@@ -37,7 +37,9 @@ from utils.streamlit.helpers import (
 from streamlit_modal import Modal
 from tamla import get_bot_response
 import ast
+from dotenv import load_dotenv
 
+load_dotenv()
 def display_store_info_major(data):
     # 관련자격 (링크 추가)
     subject_name = data.get('subject_name', '').split(', ')
@@ -350,7 +352,7 @@ def main():
     # 날씨, 시간에 따른 인사말을 세션 상태에 저장
     if 'greeting_message' not in ss:
         parsed_query.chat_mode = ChatMode.JUST_CHAT_GREETING_ID
-        chat_state.flag = ""
+        # chat_state.flag = ""
         chat_state.update(parsed_query=parsed_query)
         ss.greeting_message = get_bot_response(chat_state)
     # 사용자 ID에 따른 전체 메시지 생성 

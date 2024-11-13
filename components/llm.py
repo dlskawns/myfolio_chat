@@ -19,6 +19,10 @@ from utils.streamlit.helpers import fix_markdown
 from langchain_google_genai import ChatGoogleGenerativeAI
 from utils.chat_state import ChatState
 from langchain_core.runnables import RunnablePassthrough
+
+from dotenv import load_dotenv
+
+load_dotenv()
 class CallbackHandlerDDGStreamlit(BaseCallbackHandler):
     def __init__(self, container: DeltaGenerator, end_str: str = ""):
         self.container = container
@@ -64,7 +68,7 @@ def get_llm_with_gemini(
     #     verbose=True,  # tmp
     llm = ChatOpenAI(
         model="gpt-4o-mini",
-        api_key="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",
+        api_key=api_key,
         temperature=settings.temperature,
         request_timeout=LLM_REQUEST_TIMEOUT,
         streaming=True,

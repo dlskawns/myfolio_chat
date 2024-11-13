@@ -37,7 +37,7 @@ def get_bot_response(
         chat_chain = get_prompt_llm_chain(
             JUST_CHAT_PROMPT,
             llm_settings=chat_state.bot_settings,
-            api_key=chat_state.google_api_key,
+            api_key=chat_state.openai_api_key,
             callbacks=chat_state.callbacks,
             stream=True,
         )
@@ -55,7 +55,7 @@ def get_bot_response(
         chat_chain = get_prompt_llm_chain(
             CAREER_CHAT_PROMPT,
             llm_settings=chat_state.bot_settings,
-            api_key=chat_state.google_api_key,
+            api_key=chat_state.openai_api_key,
             callbacks=chat_state.callbacks,
             stream=True,
         )
@@ -73,7 +73,7 @@ def get_bot_response(
         chat_chain = get_prompt_llm_chain(
             SCHOOL_CHAT_PROMPT,
             llm_settings=chat_state.bot_settings,
-            api_key=chat_state.google_api_key,
+            api_key=chat_state.openai_api_key,
             callbacks=chat_state.callbacks,
             stream=True,
         )
@@ -91,7 +91,7 @@ def get_bot_response(
         chat_chain = get_prompt_llm_chain(
             MAJOR_CHAT_PROMPT,
             llm_settings=chat_state.bot_settings,
-            api_key=chat_state.google_api_key,
+            api_key=chat_state.openai_api_key,
             callbacks=chat_state.callbacks,
             stream=True,
         )
@@ -109,7 +109,7 @@ def get_bot_response(
         chat_chain = get_prompt_llm_chain(
             RESPONSE_CHAT_PROMPT,
             llm_settings=chat_state.bot_settings,
-            api_key=chat_state.google_api_key,
+            api_key=chat_state.openai_api_key,
             callbacks=chat_state.callbacks,
             stream=True,
         )
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         ChatState(
             operation_mode=OperationMode.CONSOLE,
             chat_history=chat_history,
-            google_api_key=GOOGLE_API_KEY,
+            openai_api_key=DEFAULT_OPENAI_API_KEY,
             user_id=None,  # would be set to None by default but just to be explicit
         )
     )

@@ -5,7 +5,7 @@ import streamlit as st
 from components.llm import CallbackHandlerDDGConsole
 # from docdocgo import do_intro_tasks
 from utils.chat_state import ChatState
-from utils.prepare import GEMINI_API_KEY
+from utils.prepare import GEMINI_API_KEY, DEFAULT_OPENAI_API_KEY
 # from utils.streamlit.fix_event_loop import remove_tornado_fix
 # from utils.type_utils import OperationMode
 from utils.streamlit.helpers import mode_options
@@ -46,7 +46,7 @@ def prepare_app():
             CallbackHandlerDDGConsole(),
             "placeholder for CallbackHandlerDDGStreamlit",
         ],
-        google_api_key=GEMINI_API_KEY,
+        openai_api_key=DEFAULT_OPENAI_API_KEY,
     )
 
     st.session_state.prev_supplied_gemini_api_key = None

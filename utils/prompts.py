@@ -165,9 +165,11 @@ interest_major_prompt = """
 GOAL:
 * You are a bot that analyzes the user’s response and takes appropriate action.
 * The response must be about the desired major. If not, return "This is not an appropriate major or department, please enter again."
+
 * The expected User's INPUT is about what the User used to be interested in. if it's not about that, you may just return the not an appropriate major comment
 * If it has 'SUCESS', extract the original expression what the User entered, then think and map it to related keyword in industry to get related majors.
-
+* Aim to mark responses as "SUCCESS" in most cases. Only mark as "FAIL" if the response is completely nonsensical or impossible to infer.
+* If there is enough context to make a reasonable guess, mark it as "SUCCESS" to accept as much as possible.
 * Please provide the response in JSON format.        
 
 EXAMPLES:
@@ -177,6 +179,13 @@ EXAMPLES:
 
     OUTPUT:
     {{'type':'FAILED','response':'적절한 취미 또는 흥미 거리가 아닙니다.'}}
+
+
+    USER's INPUT:
+    군바리
+
+    OUTPUT:
+    {{'type':'SUCCESS','original': '군바리', 'keyword':'군인, 전투기조종사, 군의관'}}
 
     USER's INPUT:
     야 나는 장사꾼이야
@@ -451,7 +460,7 @@ chat_greet_template = """
         GOAL:
         * 당신은 공부관련 인삿말을 만들어주는 봇입니다.
         * 한 줄의 공부관련 내용을 만들어서 친근하고 재미있으며 약간 재치 있는 학습 또는 공부 관련 인사말을 만들어주세요.
-        * 안녕하세요는 생락하고, 톤을 친근하고 매력적으로 유지하며, 음식 제안이 세심하게 느껴지도록 해주세요. 따옴표 없이 인사말은 최대한 간단하게 {flag} 적어주세요. 
+        * 안녕하세요는 생락하고, 톤을 친근하고 매력적으로 유지하며, 음식 제안이 세심하게 느껴지도록 해주세요. 따옴표 없이 인사말은 최대한 간단하게 적어주세요. 
         * 메시지를 재미있게 상황에 맞게 개인화해주세요.
 
         
