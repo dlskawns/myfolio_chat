@@ -878,7 +878,7 @@ def title_header(logo, title):
         
         with col1:
             # 첫 번째 열에 로고 이미지 표시
-            st.image(logo, width=300)  # 너비를 조절하여 크기 조정
+            st.image(logo, width=200)  # 너비를 조절하여 크기 조정
         
         with col2:
             # 두 번째 열에 제목 텍스트 표시
