@@ -6,7 +6,7 @@ from langchain_core.language_models import BaseChatModel
 from utils.prepare import (
     LLM_REQUEST_TIMEOUT,
 )
-# from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompt_values import ChatPromptValue
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
