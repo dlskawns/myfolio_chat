@@ -3,6 +3,8 @@ import os
 from langchain.vectorstores import Chroma
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain.embeddings.openai import OpenAIEmbeddings
+
 import streamlit as st
 
 vdb_instance = None
@@ -10,11 +12,17 @@ vdb_instance = None
 
 class vectordb:
     def __init__(self):
-        self.c_bucket_name = "chatbot-myfolio-changsa"
-        self.c_folder_path = "chroma_db"
+        # self.c_bucket_name = "chatbot-myfolio-changsa"
+        # self.c_folder_path = "chroma_db"
+        # self.c_local_path = "/tmp/chroma_db"
+        # self.m_bucket_name = "chatbot-myfolio-shangsa-major"
+        # self.m_folder_path = "chroma_db_major"
+        # self.m_local_path = "/tmp/major/chroma_db"
+        self.c_bucket_name = "chatbot-myfolio-changsa2"
+        self.c_folder_path = "open_chroma_db"
         self.c_local_path = "/tmp/chroma_db"
-        self.m_bucket_name = "chatbot-myfolio-shangsa-major"
-        self.m_folder_path = "chroma_db_major"
+        self.m_bucket_name = "chatbot-myfolio-shangsa-major2"
+        self.m_folder_path = "open_chroma_db_major"
         self.m_local_path = "/tmp/major/chroma_db"
         self.s3 = boto3.client('s3',
             aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -41,17 +49,18 @@ class vectordb:
     def embedding_model(self):
         print('임베딩모델 다운로드중')
         # Embedding 모델 불러오기 - 개별 환경에 맞는 device로 설정
-        model_name = "BAAI/bge-m3"
-        model_kwargs = {
-            # "device": "cuda"
-            "device": "mps"
-            # "device": "cpu"
-        }
-        encode_kwargs = {"normalize_embeddings": True}
-        hugging_embeddings = HuggingFaceEmbeddings(
-            model_name=model_name,
-            model_kwargs=model_kwargs,
-            encode_kwargs=encode_kwargs,)
+        # model_name = "BAAI/bge-m3"
+        # model_kwargs = {
+        #     # "device": "cuda"
+        #     "device": "mps"
+        #     # "device": "cpu"
+        # }
+        # encode_kwargs = {"normalize_embeddings": True}
+        # hugging_embeddings = HuggingFaceEmbeddings(
+        #     model_name=model_name,
+        #     model_kwargs=model_kwargs,
+        #     encode_kwargs=encode_kwargs,)
+        hugging_embeddings  = OpenAIEmbeddings()
         return hugging_embeddings
 def get_vectordb():
     global vdb_instance
