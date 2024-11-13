@@ -226,7 +226,7 @@ m_vectorstore = vdb.m_hugging_vectorstore
 m_retriever = m_vectorstore.as_retriever(search_kwargs={"k": 10})
 
 # Show title and description.
-st.logo(logo := "/Users/david/Downloads/창사챗봇/Img_Logo.png")
+st.logo(logo := "media/Img_Logo.png")
 st.set_page_config(page_title="마폴챗", page_icon=logo)
 
 # HTML and CSS for the logo size customization.
