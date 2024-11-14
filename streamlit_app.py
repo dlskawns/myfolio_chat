@@ -17,6 +17,7 @@ from utils.helpers import (
     VERSION,
     WALKTHROUGH_TEXT,
 )
+import math
 from agents.dbmanager import (
     get_user_facing_collection_name,
 )
@@ -42,11 +43,12 @@ from dotenv import load_dotenv
 load_dotenv()
 def display_store_info_major(data):
     # 관련자격 (링크 추가)
-    subject_name = data.get('subject_name', '').split(', ')
+# newlist = [x for x in mylist if math.isnan(x) == False]
+    subject_name = data.get('subject_name', '').split(', ') if data.get('subject_name', '') else ''
     linked_subject = []
     for subject in subject_name:
         # 괄호로 URL을 분리
-        if '(' in subject and ')' in subject:
+        if '(' in subject and ')' in subject and subject:
             name, url = subject.split('(')
             url = url.replace(")", "").strip()
             linked_subject.append(f"<a href='{url}' target='_blank' style='text-decoration: none; color: #007bff;'>{name.strip()}</a>")
@@ -56,55 +58,58 @@ def display_store_info_major(data):
 
     # 직업명
     content += "<p><b>🔍 연봉 정보</b></p>"
-    content += f"<p>평균 월{int(data.get('salary', ''))}만원</p>"
+    content += f"<p>평균 월 {int(data.get('salary', ''))}만원</p>"
     
     content += f"<br>"
 
     # 관련직업명
     content += "<p><b>🔍 분야</b></p>"
-    content += f"<p>{data.get('department', ''), data.get('department', '')}</p>"
+    content += f"<p>{data.get('department', '') if data.get('department', '') else ''}</p>"
     
     content += f"<br>"
 
     # 요약능력
     content += "<p><b>🔑 자격 및 면허</b></p>"
-    content += f"<p>{data.get('qualifications', '')}</p>"
+    content += f"<p>{data.get('qualifications', '') if data.get('qualifications', '') else ''}</p>"
 
     content += f"<br>"
 
     # 적성 및 흥미
     content += "<p><b>💡 적성 및 흥미</b></p>"
-    content += f"<p><b>적성:</b> {data.get('property', '')}</p>"
-    content += f"<p><b>흥미:</b> {data.get('interest', '')}</p>"
+    content += f"<p><b>적성:</b> {data.get('property', '') if data.get('property', '') else ''}</p>"
+    content += f"<p><b>흥미:</b> {data.get('interest', '') if data.get('interest', '') else ''}</p>"
 
     content += f"<br>"
 
     # subject
     content += "<p><b>🔍 이수 과목</b></p>"
-    content += f"<p>{data.get('subject_name', '')}</p>"
+    content += f"<p>{data.get('subject_name', '') if data.get('subject_name', '') else ''}</p>"
     content += f"<br>"
 
     return content
 
+def isNaN(num):
+    return num != num
 
 def display_store_info(data):
     # 관련자격 (링크 추가)
-    certificates = data.get('certificates', '').split(', ')
+    certificates = data.get('certificates', '').split(', ') if not isNaN(data.get('certificates', '')) else ''
     linked_certificates = []
     for certificate in certificates:
         # 괄호로 URL을 분리
-        if '(' in certificate and ')' in certificate:
-            name, url = certificate.split('(')
+        if '(' in certificate and ')' in certificate and certificate:
+            name, url = certificate.split('(') 
             url = url.replace(")", "").strip()
             linked_certificates.append(f"<a href='{url}' target='_blank' style='text-decoration: none; color: #007bff;'>{name.strip()}</a>")
         else:
             linked_certificates.append(certificate.strip())
-    institutes = data.get('job_rel_orgs', '').split(', ')
+    institutes = data.get('job_rel_orgs', '').split(', ') if not isNaN(data.get('job_rel_orgs', '')) else ''
     linked_institute = []
     for institute in institutes:
         # 괄호로 URL을 분리
-        if '(' in institute and ')' in institute:
-            name, url = institute.split('(')
+        if '(' in institute and ')' in institute and institute:
+            print('뭐길래',institute)
+            name, url = institute.split('(') 
             url = url.replace(")", "").strip()
             linked_institute.append(f"<a href='{url}' target='_blank' style='text-decoration: none; color: #007bff;'>{name.strip()}</a>")
         else:
@@ -132,8 +137,8 @@ def display_store_info(data):
 
     # 적성 및 흥미
     content += "<p><b>💡 적성 및 흥미</b></p>"
-    content += f"<p><b>적성:</b> {data.get('aptit_name', '')}</p>"
-    content += f"<p><b>흥미:</b> {data.get('interest', '')}</p>"
+    content += f"<p><b>적성:</b> {data.get('aptit_name', '') if data.get('aptit_name', '') else ''}</p>"
+    content += f"<p><b>흥미:</b> {data.get('interest', '')if data.get('interest', '') else ''}</p>"
 
     content += f"<br>"
 
@@ -182,6 +187,14 @@ def url_setting_major(data):
     # 최종 HTML을 Markdown에 적용
     info_box = f"""
         <div style="border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:0px;">
+            <div style="font-size: 1.2em; font-weight: bold;">🍊 {data.get('major', '학과 정보')} 정보</div>
+            <div style="padding-top: 10px;">
+                {content}
+            </div>
+        </div>
+    """
+    info_box = f"""
+        <div style="border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:0px;">
             <details>
                 <summary style="cursor: pointer; font-size: 1.2em; font-weight: bold;">🍊 {data.get('major', '학과 정보')} 정보</summary>
                 <div style="padding-top: 10px;">
@@ -199,14 +212,22 @@ def url_setting_career(data):
     # 최종 HTML을 Markdown에 적용
     info_box = f"""
         <div style="border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:0px;">
-            <details>
-                <summary style="cursor: pointer; font-size: 1.2em; font-weight: bold;">{data.get('name', '직업 정보')} 정보</summary>
-                <div style="padding-top: 10px;">
-                    {content}
-                </div>
-            </details>
+            <div style="font-size: 1.2em; font-weight: bold;">🍊 {data.get('major', '학과 정보')} 정보</div>
+            <div style="padding-top: 10px;">
+                {content}
+            </div>
         </div>
     """
+    # info_box = f"""
+    #     <div style="border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:0px;">
+    #         <details>
+    #             <summary style="cursor: pointer; font-size: 1.2em; font-weight: bold;">{data.get('name', '직업 정보')} 정보</summary>
+    #             <div style="padding-top: 10px;">
+    #                 {content}
+    #             </div>
+    #         </details>
+    #     </div>
+    # """
     return info_box
 
 
@@ -452,13 +473,14 @@ def main():
             result = json_format(result)
             print('들어간다1')
             if result['type'] == 'FAILED':
+                ss.messages.pop()
                 print('들어감1')
                 ss.messages.append({"role": "assistant", "content": result['response'], "avatar": "🦖"})
                     # 메시지를 다시 표시합니다.
                 with st.chat_message('assistant'):
                     st.write(result['response'])
                 desired_job = None
-                ss.stage = 'career_get_desired_job'
+                ss.stage = 'career_ask_desired_job'
                 # ss.stage = None
                 st.rerun()
             elif result['type'] == 'SUCCESS':
@@ -569,13 +591,14 @@ def main():
             result = json_format(result)
             print('들어간다1')
             if result['type'] == 'FAILED':
+                ss.messages.pop()
                 print('들어감1')
                 ss.messages.append({"role": "assistant", "content": result['response'], "avatar": "🦖"})
                     # 메시지를 다시 표시합니다.
                 with st.chat_message('assistant'):
                     st.write(result['response'])
                 desired_major = None
-                ss.stage = 'career_get_desired_job'
+                ss.stage = 'career_no_options'
                 # ss.stage = None
                 st.rerun()
             elif result['type'] == 'SUCCESS':
@@ -661,6 +684,7 @@ def main():
             result = json_format(result)
             print('들어간다1')
             if result['type'] == 'FAILED':
+                ss.messages.pop()
                 print('들어감1')
                 ss.messages.append({"role": "assistant", "content": result['response'], "avatar": "🦖"})
                     # 메시지를 다시 표시합니다.
@@ -668,7 +692,7 @@ def main():
                     st.write(result['response'])
                 desired_interest = None
                 ss.stage = 'major_no_options'
-                # ss.stage = None
+                ss.stage = None
                 st.rerun()
             elif result['type'] == 'SUCCESS':
                 
