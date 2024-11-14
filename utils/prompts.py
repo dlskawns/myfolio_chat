@@ -64,19 +64,19 @@ EXAMPLES:
     안녕
 
     OUTPUT:
-    {{'type':'FAILED','response':'적절한 직업이 아닙니다, 다시 입력해주세요'}}
+    {{'type':'FAILED','response':'안녕'}}
 
     USER's INPUT:
     야 나는 장사꾼이야
 
     OUTPUT:
-    {{'type':'FAILED','response':'적절한 직업이 아닙니다, 다시 입력해주세요'}}
+    {{'type':'FAILED','response':'장사꾼'}}
 
     USER's INPUT:
     맛있는 직업 추천좀
 
     OUTPUT:
-    {{'type':'FAILED','response':'적절한 직업이 아닙니다, 다시 입력해주세요'}}
+    {{'type':'FAILED','response':'맛있는 직업'}}
 
     USER's INPUT:
     건축전문가
@@ -115,19 +115,19 @@ EXAMPLES:
     안녕
 
     OUTPUT:
-    {{'type':'FAILED','response':'적절한 전공이 아닙니다, 다시 입력해주세요'}}
+    {{'type':'FAILED','response':'안녕'}}
 
     USER's INPUT:
     야 나는 장사꾼이야
 
     OUTPUT:
-    {{'type':'FAILED','response':'적절한 전공이 아닙니다, 다시 입력해주세요'}}
+    {{'type':'FAILED','response':'장사꾼'}}
 
     USER's INPUT:
     맛있는 직업 추천좀
 
     OUTPUT:
-    {{'type':'FAILED','response':'적절한 전공이 아닙니다, 다시 입력해주세요'}}
+    {{'type':'FAILED','response':'맛있는 직업'}}
 
     USER's INPUT:
     건축학과
@@ -178,7 +178,7 @@ EXAMPLES:
     안녕
 
     OUTPUT:
-    {{'type':'FAILED','response':'적절한 취미 또는 흥미 거리가 아닙니다.'}}
+    {{'type':'FAILED','original': '안녕', 'keyword':'안내 데스크, 가이드'}}
 
 
     USER's INPUT:

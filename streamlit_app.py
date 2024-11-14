@@ -92,31 +92,35 @@ def isNaN(num):
     return num != num
 
 def display_store_info(data):
+    
     # 관련자격 (링크 추가)
     certificates = data.get('certificates', '').split(', ') if not isNaN(data.get('certificates', '')) else ''
 
     linked_certificates = []
+    # certificate = None
     for certificate in certificates:
         # 괄호로 URL을 분리
-        if '(' in certificate and ')' in certificate and certificate:
-            name, url = certificate.split('(') 
+        if 'https' in certificate:
+            name, url = certificate.split('(https') 
             url = url.replace(")", "").strip()
+            url = 'https'+url
             linked_certificates.append(f"<a href='{url}' target='_blank' style='text-decoration: none; color: #007bff;'>{name.strip()}</a>")
         else:
-            linked_certificates.append(certificate.strip())
+            linked_institute.append(certificate.strip())
     institutes = data.get('job_rel_orgs', '').split(', ') if not isNaN(data.get('job_rel_orgs', '')) else ''
     linked_institute = []
+    # institute = None
     for institute in institutes:
         # 괄호로 URL을 분리
-        
-        if '(' in institute and ')' in institute and institute:
-            print('뭐길래',institute)
-            institute = institute.replace('(주)','').replace('(사)','').replace('(유)', '')
+        if 'https' in institute:
+            # print('뭐길래',institute)
+            institute = institute.replace('(https')
             name, url = institute.split('(')
             url = url.replace(")", "").strip()
+            url = 'https'+url
             linked_institute.append(f"<a href='{url}' target='_blank' style='text-decoration: none; color: #007bff;'>{name.strip()}</a>")
         else:
-            linked_institute.append(certificate.strip())
+            linked_institute.append(institute.strip())
 
     content = "<div style='font-family: sans-serif; padding: 10px;'>"
 
@@ -196,16 +200,16 @@ def url_setting_major(data):
             </div>
         </div>
     """
-    info_box = f"""
-        <div style="border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:0px;">
-            <details>
-                <summary style="cursor: pointer; font-size: 1.2em; font-weight: bold;">🍊 {data.get('major', '학과 정보')} 정보</summary>
-                <div style="padding-top: 10px;">
-                    {content}
-                </div>
-            </details>
-        </div>
-    """
+    # info_box = f"""
+    #     <div style="border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:0px;">
+    #         <details>
+    #             <summary style="cursor: pointer; font-size: 1.2em; font-weight: bold;">🍊 {data.get('major', '학과 정보')} 정보</summary>
+    #             <div style="padding-top: 10px;">
+    #                 {content}
+    #             </div>
+    #         </details>
+    #     </div>
+    # """
     return info_box
 
 
@@ -475,7 +479,7 @@ def main():
             result = open_ai_chat(parsed_query=parsed_query, message=desired_job)
             result = json_format(result)
             print('들어간다1')
-            if result['type'] == 'FAILED':
+            if result['type'] == 'yeild':
                 ss.messages.pop()
                 print('들어감1')
                 ss.messages.append({"role": "assistant", "content": result['response'], "avatar": "🦖"})
@@ -486,7 +490,7 @@ def main():
                 ss.stage = 'career_ask_desired_job'
                 # ss.stage = None
                 st.rerun()
-            elif result['type'] == 'SUCCESS':
+            elif result['type'] == 'SUCCESS' or result['type'] == 'FAILED':
                 ss.messages.pop()
                 print('들어감2')
                 message = f"{result['response']}와 비슷한 직업을 찾았습니다. 아래 중에서 골라주세요."
@@ -593,7 +597,7 @@ def main():
             result = open_ai_chat(parsed_query=parsed_query, message=desired_major)
             result = json_format(result)
             print('들어간다1')
-            if result['type'] == 'FAILED':
+            if result['type'] == 'yeild':
                 ss.messages.pop()
                 print('들어감1')
                 ss.messages.append({"role": "assistant", "content": result['response'], "avatar": "🦖"})
@@ -604,7 +608,7 @@ def main():
                 ss.stage = 'career_no_options'
                 # ss.stage = None
                 st.rerun()
-            elif result['type'] == 'SUCCESS':
+            elif result['type'] == 'SUCCESS' or result['type'] == 'FAILED':
                 ss.messages.pop()
                 print('들어감2')
                 message = f"{result['response']}와 관련된 전공을 찾았습니다. 아래 중에서 골라주세요."
@@ -686,7 +690,7 @@ def main():
             result = open_ai_chat(parsed_query=parsed_query, message=desired_interest)
             result = json_format(result)
             print('들어간다1')
-            if result['type'] == 'FAILED':
+            if result['type'] == 'yeild':
                 ss.messages.pop()
                 print('들어감1')
                 ss.messages.append({"role": "assistant", "content": result['response'], "avatar": "🦖"})
@@ -697,7 +701,7 @@ def main():
                 ss.stage = 'major_no_options'
                 ss.stage = None
                 st.rerun()
-            elif result['type'] == 'SUCCESS':
+            elif result['type'] == 'SUCCESS' or result['type'] == 'FAILED':
                 
                 ret_result = m_retriever.invoke(result['keyword'])
                 print(f'\n\n\n\n\n\n{ret_result}\n\n\n\n\n\n\n')
