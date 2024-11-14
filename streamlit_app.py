@@ -94,6 +94,7 @@ def isNaN(num):
 def display_store_info(data):
     # 관련자격 (링크 추가)
     certificates = data.get('certificates', '').split(', ') if not isNaN(data.get('certificates', '')) else ''
+
     linked_certificates = []
     for certificate in certificates:
         # 괄호로 URL을 분리
@@ -107,9 +108,11 @@ def display_store_info(data):
     linked_institute = []
     for institute in institutes:
         # 괄호로 URL을 분리
+        
         if '(' in institute and ')' in institute and institute:
             print('뭐길래',institute)
-            name, url = institute.split('(') 
+            institute = institute.replace('(주)','').replace('(사)','').replace('(유)', '')
+            name, url = institute.split('(')
             url = url.replace(")", "").strip()
             linked_institute.append(f"<a href='{url}' target='_blank' style='text-decoration: none; color: #007bff;'>{name.strip()}</a>")
         else:
