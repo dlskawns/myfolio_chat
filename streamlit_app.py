@@ -101,7 +101,10 @@ def display_store_info(data):
     for certificate in certificates:
         # 괄호로 URL을 분리
         if 'https' in certificate:
-            name, url = certificate.split('(https') 
+            print(certificate)
+            certificate = certificate.split('(https') 
+            name = certificate[0]
+            url = certificate[1]
             url = url.replace(")", "").strip()
             url = 'https'+url
             linked_certificates.append(f"<a href='{url}' target='_blank' style='text-decoration: none; color: #007bff;'>{name.strip()}</a>")
@@ -114,8 +117,9 @@ def display_store_info(data):
         # 괄호로 URL을 분리
         if 'https' in institute:
             # print('뭐길래',institute)
-            institute = institute.replace('(https')
-            name, url = institute.split('(')
+            institute = institute.split('(https')
+            name = institute[0]
+            url = institute[1]
             url = url.replace(")", "").strip()
             url = 'https'+url
             linked_institute.append(f"<a href='{url}' target='_blank' style='text-decoration: none; color: #007bff;'>{name.strip()}</a>")
@@ -200,16 +204,7 @@ def url_setting_major(data):
             </div>
         </div>
     """
-    # info_box = f"""
-    #     <div style="border:1px solid #ddd; border-radius:5px; padding:10px; margin-bottom:0px;">
-    #         <details>
-    #             <summary style="cursor: pointer; font-size: 1.2em; font-weight: bold;">🍊 {data.get('major', '학과 정보')} 정보</summary>
-    #             <div style="padding-top: 10px;">
-    #                 {content}
-    #             </div>
-    #         </details>
-    #     </div>
-    # """
+
     return info_box
 
 
